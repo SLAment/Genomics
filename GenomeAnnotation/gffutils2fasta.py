@@ -292,7 +292,7 @@ for gene in db.features_of_type('gene'):
 				# phase = int(feature[7])
 
 				if strand == '+':
-					if child_counter == 0: # Consider it only on the beginning of the protein
+					if child_counter == 1: # Consider it only on the beginning of the protein
 						start = child.start - 1 + phase
 						child_counter += 1
 					else: # All the other cds should be in frame
