@@ -34,7 +34,7 @@ import re
 import gffutils
 # ------------------------------------------------------
 
-version = 1.1
+version = 1.2
 versiondisplay = "{0:.2f}".format(version)
 supportedtypes = ["gene", "CDS", "exon", "noutrs"] # Unlike the CDS, Exons may contain the UTRs; noutrs is from start to stop codon without introns in nuleotides
 
@@ -131,7 +131,7 @@ for gene in db.features_of_type('gene'):
 	# dir(gene) --> 'astuple', 'attributes', 'bin', 'calc_bin', 'chrom', 'dialect', 'end', 'extra', 'featuretype', 'file_order', 'frame', 'id', 'keep_order', 'score', 'seqid', 'sequence', 'sort_attribute_values', 'source', 'start', 'stop', 'strand'
 	geneID = gene['ID'][0]
 	genename = gene['Name'][0] # same as gene.attributes['Name'][0]
-	seq_record =records_dict[gene.chrom] # The chromosome sequence
+	seq_record = records_dict[gene.chrom] # The chromosome sequence
 
 	if args.type == 'gene':
 		# Get the sequence for this gene
@@ -287,7 +287,7 @@ for gene in db.features_of_type('gene'):
 				
 				child_counter += 1
 			# Produce a single CDS for the entire gene, linked to **hey**
-			elif args.join:
+			else:
 				# Get phase for the very first exon
 				# phase = int(feature[7])
 
@@ -311,7 +311,7 @@ for gene in db.features_of_type('gene'):
 		if args.join and args.type == 'CDS': # **hey** Print into the file if the output is to be joined
 			try: # Sometimes genes won't have a CDS feature, in which case we better move on...
 				if args.proteinon:
-					
+
 					if strand == '+':	
 						cdsseq_concat = child_concat.seq.translate()
 						child_concat.seq = cdsseq_concat
@@ -337,7 +337,7 @@ for gene in db.features_of_type('gene'):
 					child_concat.id = geneID + '|' + genename + '|CDS|'
 
 			except:
-				print("The gene " + cdsparent + " is weird. Maybe it doesn't have a CDS? Skipped.")
+				print("The gene " + gene['ID'][0] + " " + gene['Name'][0] + " is weird. Maybe it doesn't have a CDS? Skipped.")
 
 			# Finally write the output sequence
 			SeqIO.write(child_concat, output_handle, "fasta")
