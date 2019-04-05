@@ -230,14 +230,14 @@ for gene in db.features_of_type('gene'):
 
 		for child in db.children(gene, featuretype=args.type, order_by='start'):
 
-			parents = db.parents(child, featuretype='mRNA')
-			childID = child['ID'][0]
+			## --- Get the cdsparent name from the mRNA ---
+			# parents = db.parents(child, featuretype='mRNA') # Might be useful for different transcripts, but I don't encounter that problem
+			# cdsparent = list(parents)[0]['ID'][0]
+			## --------------------------------------------
 			
-			if len(list(parents)) == 0: # In case it cannot retrieve the parent just call it like the gene
-				cdsparent = geneID
-			else:
-				cdsparent = list(parents)[0]['ID'][0]
+			cdsparent = geneID
 
+			childID = child['ID'][0]
 			strand = child.strand
 			phase = int(child.frame)
 
