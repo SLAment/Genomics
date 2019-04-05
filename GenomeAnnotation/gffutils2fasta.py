@@ -34,7 +34,7 @@ import re
 import gffutils
 # ------------------------------------------------------
 
-version = 1.21
+version = 1.22
 versiondisplay = "{0:.2f}".format(version)
 supportedtypes = ["gene", "CDS", "exon", "noutrs"] # Unlike the CDS, Exons may contain the UTRs; noutrs is from start to stop codon without introns in nuleotides
 
@@ -232,7 +232,12 @@ for gene in db.features_of_type('gene'):
 
 			parents = db.parents(child, featuretype='mRNA')
 			childID = child['ID'][0]
-			cdsparent = list(parents)[0]['ID'][0]
+			
+			if len(list(parents)) == 0: # In case it cannot retrieve the parent just call it like the gene
+				cdsparent = geneID
+			else:
+				cdsparent = list(parents)[0]['ID'][0]
+
 			strand = child.strand
 			phase = int(child.frame)
 
