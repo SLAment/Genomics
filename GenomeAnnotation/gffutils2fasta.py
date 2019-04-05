@@ -326,7 +326,7 @@ for gene in db.features_of_type('gene'):
 						child_concat.description = seq_record.description
 
 				if args.onlyids: # Name of the output
-					child_concat.id = childID
+					child_concat.id = geneID
 					child_concat.description = ''
 				elif args.onlynames: # Name of the output
 					child_concat.id = genename
