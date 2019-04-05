@@ -34,7 +34,7 @@ import re
 import gffutils
 # ------------------------------------------------------
 
-version = 1.2
+version = 1.21
 versiondisplay = "{0:.2f}".format(version)
 supportedtypes = ["gene", "CDS", "exon", "noutrs"] # Unlike the CDS, Exons may contain the UTRs; noutrs is from start to stop codon without introns in nuleotides
 
@@ -337,7 +337,7 @@ for gene in db.features_of_type('gene'):
 					child_concat.id = geneID + '|' + genename + '|CDS|'
 
 			except:
-				print("The gene " + gene['ID'][0] + " " + gene['Name'][0] + " is weird. Maybe it doesn't have a CDS? Skipped.")
+				if args.verbose: print("The gene " + gene['ID'][0] + " " + gene['Name'][0] + " is weird. Maybe it doesn't have a CDS? Skipped.")
 
 			# Finally write the output sequence
 			SeqIO.write(child_concat, output_handle, "fasta")
