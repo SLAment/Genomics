@@ -86,7 +86,7 @@ for ortho in niceorthos:
 	string = ''
 	for homolog in orthogroups[ortho][args.ref]:
 		string += ''.join(str(homolog)) + "\t"
-	reffile.write(string + '\n')
+	reffile.write(string.rstrip("\t") + '\n')
 
 # Print some info
 if args.verbose:
