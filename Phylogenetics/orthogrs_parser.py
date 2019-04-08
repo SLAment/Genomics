@@ -24,7 +24,7 @@ parser = argparse.ArgumentParser(description="* Parse Orthogroups.csv for Podosp
 parser.add_argument('orthogrscsv', help="The Orthogroups.csv output file of Orthofinder")
 parser.add_argument("--ref", "-r", help="Reference sample. Default: Podan2", default="Podan2")
 parser.add_argument("--nugrps", "-n", help="Number of orthologs per species per orthogroup. Default: 1", type=int, default=1)
-# parser.add_argument("--outputname", "-o", help="Output name set by the user")
+parser.add_argument("--outputdir", "-o", help="Path for output directory", default = ".")
 parser.add_argument('--version', "-v", action='version', version='%(prog)s ' + versiondisplay)
 parser.add_argument('--verbose', '-b', help="Give some extra information", default=False, action='store_true')
 
@@ -76,12 +76,12 @@ for ortho in orthgrlist:
 # Print output
 # ------------------------------------------------------
 # Print the filtered list of orthogroups
-ofile = open("orthogroups_" + str(args.nugrps) + "n.txt", 'w')
+ofile = open(args.outputdir + "/" + "orthogroups_" + str(args.nugrps) + "n.txt", 'w')
 for ortho in niceorthos:
 	ofile.write(ortho + '\n')
 
 # Recover the name of the reference homolog for each orthogroup
-reffile = open(args.ref + "_" + str(args.nugrps) + "n.txt", 'w')
+reffile = open(args.outputdir + "/" + args.ref + "_" + str(args.nugrps) + "n.txt", 'w')
 for ortho in niceorthos:
 	string = ''
 	for homolog in orthogroups[ortho][args.ref]:
@@ -92,6 +92,6 @@ for ortho in niceorthos:
 if args.verbose:
 	print("Total number of orthogroups: %d" % len(orthgrlist))
 	print("Number of orthogroups with %d gene(s) per species: %d" % (args.nugrps, len(niceorthos)))
-	print("Output file with orthogroups names: %s" % "orthogroups_" + str(args.nugrps) + "n.txt")
-	print("Output file with reference names: %s" % args.ref + "_" + str(args.nugrps) + "n.txt")
+	print("Output file with orthogroups names: %s" % args.outputdir + "/" + "orthogroups_" + str(args.nugrps) + "n.txt")
+	print("Output file with reference names: %s" % args.outputdir + "/" +  args.ref + "_" + str(args.nugrps) + "n.txt")
 
