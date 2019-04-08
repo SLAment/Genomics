@@ -11,10 +11,7 @@
 # +++++++++++++++++++++++++++++++++++++++++++++++++
 
 # ------------------------------------------------------
-# import os # For the input name
-import sys
-# from Bio import SeqIO
-# from Bio.Alphabet import generic_dna
+# import sys
 import argparse # For the fancy options
 # ------------------------------------------------------
 version = 1
