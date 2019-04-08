@@ -1,0 +1,100 @@
+#!/usr/bin/env python
+# encoding: utf-8
+
+# ================== orthogrs_parser =================
+# Script to parse the Orthogroups.csv output file of Orthofinder and manage it
+# for the Podospora project.
+# ==================================================
+# Sandra Lorena Ament Velasquez
+# Johannesson Lab, Evolutionary Biology Center, Uppsala University, Sweden
+# 2019/04/08
+# +++++++++++++++++++++++++++++++++++++++++++++++++
+
+# ------------------------------------------------------
+# import os # For the input name
+import sys
+# from Bio import SeqIO
+# from Bio.Alphabet import generic_dna
+import argparse # For the fancy options
+# ------------------------------------------------------
+version = 1
+versiondisplay = "{0:.2f}".format(version)
+
+# Make a nice menu for the user
+parser = argparse.ArgumentParser(description="* Parse Orthogroups.csv for Podospora *", epilog="") # Create the object using class argparse
+
+# Add options
+parser.add_argument('orthogrscsv', help="The Orthogroups.csv output file of Orthofinder")
+parser.add_argument("--ref", "-r", help="Reference sample. Default: Podan2", default="Podan2")
+parser.add_argument("--nugrps", "-n", help="Number of orthologs per species per orthogroup. Default: 1", type=int, default=1)
+# parser.add_argument("--outputname", "-o", help="Output name set by the user")
+parser.add_argument('--version', "-v", action='version', version='%(prog)s ' + versiondisplay)
+parser.add_argument('--verbose', '-b', help="Give some extra information", default=False, action='store_true')
+
+try:
+	# ArgumentParser parses arguments through the parse_args() method You can
+	# parse the command line by passing a sequence of argument strings to
+	# parse_args(). By default, the arguments are taken from sys.argv[1:]
+	args = parser.parse_args()
+	orthogrscsvopen = open(args.orthogrscsv, 'rU')
+except IOError as msg:  # Check that the file exists
+	parser.error(str(msg)) 
+	parser.print_help()
+
+# ------------------------------------------------------
+# Parse
+# ------------------------------------------------------
+tabs = [line.rstrip("\n").split("\t") for line in orthogrscsvopen] 			# Read tab file into a list
+
+samples = tabs[0] # Notice the first field is empty # 14
+
+orthogroups = {} # Make a master dictionary 
+orthgrlist = [] # keep record in the input order
+
+for line in tabs[1:]:
+	# print(line)
+	orthogr = line[0]
+	orthgrlist.append(orthogr) # Keep record of all the orthogroups
+
+	orthogroups[orthogr] = {} # Make a dictionary for each orthogroup
+	for i in range(1,len(samples)): # Ignore the name of the orthogroup
+		listgenes = line[i].split(", ")
+		if listgenes != ['']: orthogroups[orthogr][samples[i]] = line[i].split(", ") # add nested dictionaries per species (ignore cases without homolog)
+
+# ------------------------------------------------------
+# Filter 
+# ------------------------------------------------------
+niceorthos = []
+for ortho in orthgrlist:
+	orthogroups[ortho]
+
+	nice = True
+	# Does it have all species?
+	if list(orthogroups[ortho].keys()) == samples[1:]: 
+		for sp in samples[1:]:
+			if (len(orthogroups[ortho][sp]) != args.nugrps): nice = False
+		if nice: niceorthos.append(ortho) # Append to the final list if nice stayed true
+
+# ------------------------------------------------------
+# Print output
+# ------------------------------------------------------
+# Print the filtered list of orthogroups
+ofile = open("orthogroups_" + str(args.nugrps) + "n.txt", 'w')
+for ortho in niceorthos:
+	ofile.write(ortho + '\n')
+
+# Recover the name of the reference homolog for each orthogroup
+reffile = open(args.ref + "_" + str(args.nugrps) + "n.txt", 'w')
+for ortho in niceorthos:
+	string = ''
+	for homolog in orthogroups[ortho][args.ref]:
+		string += ''.join(str(homolog)) + "\t"
+	reffile.write(string + '\n')
+
+# Print some info
+if args.verbose:
+	print("Total number of orthogroups: %d" % len(orthgrlist))
+	print("Number of orthogroups with %d gene(s) per species: %d" % (args.nugrps, len(niceorthos)))
+	print("Output file with orthogroups names: %s" % "orthogroups_" + str(args.nugrps) + "n.txt")
+	print("Output file with reference names: %s" % args.ref + "_" + str(args.nugrps) + "n.txt")
+
