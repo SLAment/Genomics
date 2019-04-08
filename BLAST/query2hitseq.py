@@ -120,7 +120,8 @@ else: # Multifasta
 # Read back
 tabs = [line.rstrip("\n").split("\t") for line in open(outputhits, 'rU')] 			# Read tab file into a list
 
-if args.tophit: tabs = tabs[0] # Assume the first hit is the best one
+if args.tophit: 
+	if len(tabs) > 1: tabs = tabs[0] # Assume the first hit is the best one
 
 slices = []
 for hit in tabs:
