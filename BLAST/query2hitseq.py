@@ -121,7 +121,7 @@ else: # Multifasta
 tabs = [line.rstrip("\n").split("\t") for line in open(outputhits, 'rU')] 			# Read tab file into a list
 
 if args.tophit: 
-	if len(tabs) > 1: tabs = tabs[0] # Assume the first hit is the best one
+	if len(tabs) > 1: tabs = [tabs[0]] # Assume the first hit is the best one
 
 slices = []
 for hit in tabs:
@@ -145,7 +145,7 @@ for hit in tabs:
 		# Slice it 
 		slice = hitseq[start_final:end_final]
 		# Rename it so it's nice
-		slice.id = hitseq.id + "_Slice_" + str(start_final + 1) + "_" + str(end_final)
+		slice.id = hitseq.id + "_" + str(start_final + 1) + "-" + str(end_final)
 		slice.description = ''
 		# Save it in the list
 		slices.append(slice)
