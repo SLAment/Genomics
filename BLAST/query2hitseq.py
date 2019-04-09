@@ -107,13 +107,13 @@ if not os.path.isdir(args.temp + nameref + '_db/'): # If it exist already, don't
 	makeBLASTdb(args.genome, databasename, 'nucl')
 
 # BLAST
-outputhits = args.temp + nameqry + "VS" + nameref + "-" + "hits.tab"
-
 if args.seqid: # Only one sequence
+	outputhits = args.temp + queryseq.id + "VS" + nameref + "-" + "hits.tab"
 	query_string = '>' + queryseq.id + '\n' + str(queryseq.seq)
 	blast_command = NcbiblastnCommandline(cmd='blastn', out=outputhits, outfmt=6, db=databasename, evalue=0.001, num_threads=args.threads)
 	stdout, stderr = blast_command(stdin=query_string)
 else: # Multifasta
+	outputhits = args.temp + nameqry + "VS" + nameref + "-" + "hits.tab"
 	blast_command = NcbiblastnCommandline(query=args.query, out= outputhits, outfmt=6, db=databasename, evalue=0.001, num_threads=args.threads)
 	stdout, stderr = blast_command()
 
