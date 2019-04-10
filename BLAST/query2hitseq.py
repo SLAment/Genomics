@@ -21,7 +21,7 @@ import subprocess # For the database
 from shutil import rmtree # For removing directories
 import argparse # For the fancy options
 # ------------------------------------------------------
-version = 1.0
+version = 1.1
 versiondisplay = "{0:.2f}".format(version)
 
 # Make a nice menu for the user
@@ -89,7 +89,8 @@ if args.seqid:
 	if len(matching) != 0: # Make sure there is a match
 		queryseq = query_dict[args.seqid]
 	else:
-		print("\tNo match for " + args.seqid + "!")
+		print("\tNo match for " + args.seqid + "! Exiting ...")
+		sys.exit(1)
 else:
 	queryseq = list(query_dict.keys())[0] #  Take the first sequence
 
