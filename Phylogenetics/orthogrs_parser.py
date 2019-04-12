@@ -13,8 +13,9 @@
 # ------------------------------------------------------
 # import sys
 import argparse # For the fancy options
+import random
 # ------------------------------------------------------
-version = 1.1
+version = 1.2
 versiondisplay = "{0:.2f}".format(version)
 
 # Make a nice menu for the user
@@ -24,6 +25,7 @@ parser = argparse.ArgumentParser(description="* Parse Orthogroups.csv for Podosp
 parser.add_argument('orthogrscsv', help="The Orthogroups.csv output file of Orthofinder")
 parser.add_argument("--ref", "-r", help="Reference sample. Default: Podan2", default="Podan2")
 parser.add_argument("--nugrps", "-n", help="Number of orthologs per species per orthogroup. Default: 1", type=int, default=1)
+parser.add_argument("--sample", "-s", help="Sample this number of orthologs. Default: all", type=int, default=float('inf'))
 parser.add_argument("--outputdir", "-o", help="Path for output directory", default = ".")
 parser.add_argument('--version', "-v", action='version', version='%(prog)s ' + versiondisplay)
 parser.add_argument('--verbose', '-b', help="Give some extra information", default=False, action='store_true')
@@ -73,6 +75,19 @@ for ortho in orthgrlist:
 		if nice: niceorthos.append(ortho) # Append to the final list if nice stayed true
 
 # ------------------------------------------------------
+# Sample 
+# ------------------------------------------------------
+totalnumorthos = len(niceorthos)
+if args.sample < float('Inf'):
+	samporthos = [] # Sample orthologs
+	for x in range(args.sample):
+		randnum = random.randint(1, len(niceorthos) + 1) # Generate a random number to use it as index
+		samporthos.append(niceorthos[randnum])
+
+	# Replace that full list with the sample:
+	niceorthos = samporthos
+
+# ------------------------------------------------------
 # Print output
 # ------------------------------------------------------
 # Print the filtered list of orthogroups
@@ -91,7 +106,10 @@ for ortho in niceorthos:
 # Print some info
 if args.verbose:
 	print("Total number of orthogroups: %d" % len(orthgrlist))
-	print("Number of orthogroups with %d gene(s) per species: %d" % (args.nugrps, len(niceorthos)))
+	print("Number of orthogroups with %d gene(s) per species: %d" % (args.nugrps, totalnumorthos))
+	if args.sample < float('Inf'): print("   Number of sampled orthogroups with %d gene(s) per species: %d" % (args.nugrps, len(niceorthos)))
 	print("Output file with orthogroups names: %s" % args.outputdir + "/" + "orthogroups_" + str(args.nugrps) + "n.txt")
 	print("Output file with reference names: %s" % args.outputdir + "/" +  args.ref + "_" + str(args.nugrps) + "n.txt")
+
+
 
