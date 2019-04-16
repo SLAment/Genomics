@@ -21,7 +21,7 @@ import subprocess # For the database
 from shutil import rmtree # For removing directories
 import argparse # For the fancy options
 # ------------------------------------------------------
-version = 1.1
+version = 1.2
 versiondisplay = "{0:.2f}".format(version)
 
 # Make a nice menu for the user
@@ -47,8 +47,8 @@ try:
 	# parse the command line by passing a sequence of argument strings to
 	# parse_args(). By default, the arguments are taken from sys.argv[1:]
 	args = parser.parse_args()
-	queryopen = open(args.query, 'rU')
-	genomeopen = open(args.genome, 'rU')
+	queryopen = open(args.query, 'r')
+	genomeopen = open(args.genome, 'r')
 except IOError as msg:  # Check that the file exists
 	parser.error(str(msg)) 
 	parser.print_help()
@@ -119,7 +119,7 @@ else: # Multifasta
 	stdout, stderr = blast_command()
 
 # Read back
-tabs = [line.rstrip("\n").split("\t") for line in open(outputhits, 'rU')] 			# Read tab file into a list
+tabs = [line.rstrip("\n").split("\t") for line in open(outputhits, 'r')] 			# Read tab file into a list
 
 if args.tophit: 
 	if len(tabs) > 1: tabs = [tabs[0]] # Assume the first hit is the best one
@@ -152,7 +152,7 @@ for hit in tabs:
 		slices.append(slice)
 
 	# Print the sequence that corresponds to that hit
-	SeqIO.write(slices, sys.stdout, "fasta")
+SeqIO.write(slices, sys.stdout, "fasta")
 
 # ------------------------------------------------------
 # Clean
