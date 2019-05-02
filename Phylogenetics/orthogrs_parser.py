@@ -15,7 +15,7 @@
 import argparse # For the fancy options
 import random
 # ------------------------------------------------------
-version = 1.2
+version = 1.3
 versiondisplay = "{0:.2f}".format(version)
 
 # Make a nice menu for the user
@@ -80,8 +80,15 @@ for ortho in orthgrlist:
 totalnumorthos = len(niceorthos)
 if args.sample < float('Inf'):
 	samporthos = [] # Sample orthologs
-	for x in range(args.sample):
-		randnum = random.randint(1, len(niceorthos) + 1) # Generate a random number to use it as index
+
+	# If there are less orthogroups than requested
+	if totalnumorthos < args.sample:
+		maxnum = totalnumorthos
+	else:
+		maxnum = args.sample
+
+	for x in range(maxnum):
+		randnum = random.randint(0, totalnumorthos - 1) # Generate a random number to use it as index, endpoints included
 		samporthos.append(niceorthos[randnum])
 
 	# Replace that full list with the sample:
