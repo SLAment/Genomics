@@ -78,16 +78,10 @@ for ortho in orthgrlist:
 # Sample 
 # ------------------------------------------------------
 totalnumorthos = len(niceorthos)
-if args.sample < float('Inf'):
+if (args.sample < float('Inf')) and (totalnumorthos > args.sample):
 	samporthos = [] # Sample orthologs
 
-	# If there are less orthogroups than requested
-	if totalnumorthos < args.sample:
-		maxnum = totalnumorthos
-	else:
-		maxnum = args.sample
-
-	for x in range(maxnum):
+	for x in range(args.sample):
 		randnum = random.randint(0, totalnumorthos - 1) # Generate a random number to use it as index, endpoints included
 		samporthos.append(niceorthos[randnum])
 
