@@ -82,9 +82,10 @@ for sample in samples[1:]:
 		if sample + ".fa" in fasta:
 			samplefiles[sample] = fasta
 
-# Make a fasta for each orthogroup
-
+# ---- Make a fasta for each orthogroup ----
 for ortho in orthogroups:
+	# Print some info
+	if args.verbose: print("Processing %s ..." % ortho)
 	# Open a file for this orthogroup
 	ofile = open(args.outputdir + "/" + ortho + ".fa", 'w')
 
@@ -104,17 +105,18 @@ for ortho in orthogroups:
 			# Hence, make a new dictionary with those names changed
 			newrecords_dict = {}
 			for name in records_dict.keys():
-				if "(" in name or ")" in name:
-					newname = name.replace(')', '_').replace('(', '_') 
+				if "(" in name or ")" in name or ":" in name:
+					newname = name.replace(')', '_').replace('(', '_').replace(':', '_')
 					newrecords_dict[newname] = records_dict[name]
 				else:
 					newrecords_dict[name] = records_dict[name]
+
 			# Replace old one with new one
 			records_dict = newrecords_dict
 
 			# Was that enough?
 			if seq not in records_dict.keys():
-				print("File %s does not contain the sequence %s" % (fasta, seq))
+				print("File %s does not contain the sequence %s" % (samplefiles[sample], seq))
 				sys.exit(1)	
 		# ---------
 
@@ -130,5 +132,5 @@ for ortho in orthogroups:
 	SeqIO.write(orthoseqs, ofile, "fasta")
 
 	# Print some info
-	if args.verbose: print("Orthogroup %s completed" % ortho)
+	if args.verbose: print("\t... %s completed" % ortho)
 
