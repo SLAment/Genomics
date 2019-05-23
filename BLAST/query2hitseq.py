@@ -4,6 +4,8 @@
 # ================== query2hitseq =================
 # Given an input fasta sequence, BLAST it to the genome and retrieve the best hit(s) also in fasta format.
 # Based on the script BLAST_extractor.py and GFFgenesIDFix.py
+
+# https://biopython.org/DIST/docs/api/Bio.Blast.Applications-pysrc.html
 # ==================================================
 # Sandra Lorena Ament Velasquez
 # Johannesson Lab, Evolutionary Biology Center, Uppsala University, Sweden
@@ -21,7 +23,7 @@ import subprocess # For the database
 from shutil import rmtree # For removing directories
 import argparse # For the fancy options
 # ------------------------------------------------------
-version = 1.2
+version = 1.3
 versiondisplay = "{0:.2f}".format(version)
 
 # Make a nice menu for the user
@@ -34,8 +36,9 @@ parser.add_argument("--seqid", "-i", help="Name of query gene to be extracted fr
 parser.add_argument("--tophit", "-x", help="Slice only the first, top hit of the BLAST search", default=False, action='store_true')
 parser.add_argument('--temp', '-u', help="Path and directory where temporary files are written in style path/to/dir/. Default: working directory", default='./')
 parser.add_argument("--threads", "-t", help="Number of threads for BLAST. Default: 1", default="1", type=int) # nargs='+' All, and at least one, argument
-parser.add_argument("--extrabp", "-e", help="Extra base pairs cut next to the start and end of the BLAST hits (default 0)", type=int, default=0)
+parser.add_argument("--extrabp", "-f", help="Extra base pairs cut next to the start and end of the BLAST hits (default 0)", type=int, default=0)
 parser.add_argument("--minsize", "-s", help="Minimum size of BLAST hit to be consider (default 0 bp)", type=int, default=0)
+parser.add_argument("--evalue", "-e", help="Minimum size of BLAST hit to be consider (default 1 bp)", type=int, default=10)
 
 
 parser.add_argument('--clean', '-c', help="Erase the created directories and files when finish", default=False, action='store_true')
@@ -92,7 +95,7 @@ if args.seqid:
 		print("\tNo match for " + args.seqid + "! Exiting ...")
 		sys.exit(1)
 else:
-	queryseq = list(query_dict.keys())[0] #  Take the first sequence
+	queryseq = list(query_dict.keys()) #[0] #  Take the first sequence
 
 
 # -----------------------------------
@@ -111,11 +114,11 @@ if not os.path.isdir(args.temp + nameref + '_db/'): # If it exist already, don't
 if args.seqid: # Only one sequence
 	outputhits = args.temp + queryseq.id + "VS" + nameref + "-" + "hits.tab"
 	query_string = '>' + queryseq.id + '\n' + str(queryseq.seq)
-	blast_command = NcbiblastnCommandline(cmd='blastn', out=outputhits, outfmt=6, db=databasename, evalue=0.001, num_threads=args.threads)
+	blast_command = NcbiblastnCommandline(cmd='blastn', out=outputhits, outfmt=6, db=databasename, evalue=args.evalue, num_threads=args.threads)
 	stdout, stderr = blast_command(stdin=query_string)
 else: # Multifasta
 	outputhits = args.temp + nameqry + "VS" + nameref + "-" + "hits.tab"
-	blast_command = NcbiblastnCommandline(query=args.query, out= outputhits, outfmt=6, db=databasename, evalue=0.001, num_threads=args.threads)
+	blast_command = NcbiblastnCommandline(query=args.query, cmd='blastn', out=outputhits, outfmt=6, db=databasename, evalue=args.evalue, num_threads=args.threads)
 	stdout, stderr = blast_command()
 
 # Read back
