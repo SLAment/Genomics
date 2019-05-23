@@ -100,8 +100,6 @@ def makeBLASTdb(fasta, databasename, dbtype):
 	process = subprocess.Popen(createdb.split(), stdout=subprocess.PIPE) # pipe the command to the shell
 	stdout, stderr = process.communicate() # run it
 
-# ----
-
 # -----------------------------------
 # Read input
 # -----------------------------------
@@ -150,8 +148,6 @@ tabs = [line.rstrip("\n").split("\t") for line in open(outputhits, 'r')] 			# Re
 # -----------------------------------
 # Get haplotype
 # -----------------------------------
-# The first (or only) BLAST tabular file
-# tabs = [line.rstrip("\n").split("\t") for line in tabopen] 			# Read tab file into a list
 
 if args.haplo: # We are looking for entire haplotypes and the blast is only the edges
 	tabs3 = tabs
@@ -206,7 +202,6 @@ if args.haplo: # We are looking for entire haplotypes and the blast is only the 
 				# Save it in the list
 				slices.append(slice)
 
-	# print(slices)
 	SeqIO.write(slices, sys.stdout, "fasta")
 
 else: # The BLAST hits themselves are the haplotypes 
