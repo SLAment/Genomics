@@ -23,7 +23,7 @@ import subprocess # For the database
 from shutil import rmtree # For removing directories
 import argparse # For the fancy options
 # ------------------------------------------------------
-version = 1.3
+version = 1.4
 versiondisplay = "{0:.2f}".format(version)
 
 # Make a nice menu for the user
@@ -114,11 +114,11 @@ if not os.path.isdir(args.temp + nameref + '_db/'): # If it exist already, don't
 if args.seqid: # Only one sequence
 	outputhits = args.temp + queryseq.id + "VS" + nameref + "-" + "hits.tab"
 	query_string = '>' + queryseq.id + '\n' + str(queryseq.seq)
-	blast_command = NcbiblastnCommandline(cmd='blastn', out=outputhits, outfmt=6, db=databasename, evalue=args.evalue, num_threads=args.threads)
+	blast_command = NcbiblastnCommandline(cmd='blastn', out=outputhits, outfmt=6, db=databasename, evalue=args.evalue, num_threads=args.threads, task='blastn')
 	stdout, stderr = blast_command(stdin=query_string)
 else: # Multifasta
 	outputhits = args.temp + nameqry + "VS" + nameref + "-" + "hits.tab"
-	blast_command = NcbiblastnCommandline(query=args.query, cmd='blastn', out=outputhits, outfmt=6, db=databasename, evalue=args.evalue, num_threads=args.threads)
+	blast_command = NcbiblastnCommandline(query=args.query, cmd='blastn', out=outputhits, outfmt=6, db=databasename, evalue=args.evalue, num_threads=args.threads, task='blastn')
 	stdout, stderr = blast_command()
 
 # Read back
