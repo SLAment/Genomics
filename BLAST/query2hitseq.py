@@ -38,7 +38,7 @@ parser.add_argument('--temp', '-u', help="Path and directory where temporary fil
 parser.add_argument("--threads", "-t", help="Number of threads for BLAST. Default: 1", default="1", type=int) # nargs='+' All, and at least one, argument
 parser.add_argument("--extrabp", "-f", help="Extra base pairs cut next to the start and end of the BLAST hits (default 0)", type=int, default=0)
 parser.add_argument("--minsize", "-s", help="Minimum size of BLAST hit to be consider (default 0 bp)", type=int, default=0)
-parser.add_argument("--evalue", "-e", help="Minimum size of BLAST hit to be consider (default 1 bp)", type=int, default=10)
+parser.add_argument("--evalue", "-e", help="Minimum e-value of BLAST hit to be consider (default 10)", type=int, default=10)
 
 
 parser.add_argument('--clean', '-c', help="Erase the created directories and files when finish", default=False, action='store_true')
