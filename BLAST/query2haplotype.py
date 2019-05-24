@@ -139,7 +139,7 @@ if args.seqid: # Only one sequence
 	stdout, stderr = blast_command(stdin=query_string)
 else: # Multifasta
 	outputhits = args.temp + nameqry + "VS" + nameref + "-" + "hits.tab"
-	blast_command = NcbiblastnCommandline(query=args.query, cmd='blastn', out=outputhits, outfmt=6, db=databasename, evalue=args.evalue, num_threads=args.threads)
+	blast_command = NcbiblastnCommandline(query=args.query, cmd='blastn', out=outputhits, outfmt=6, db=databasename, evalue=args.evalue, num_threads=args.threads, task='blastn')
 	stdout, stderr = blast_command()
 
 # Read back
