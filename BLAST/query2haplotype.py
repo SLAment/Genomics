@@ -29,25 +29,24 @@ versiondisplay = "{0:.2f}".format(version)
 # Make a nice menu for the user
 parser = argparse.ArgumentParser(description="* Extract BLAST hits or haplotypes *", epilog="") # Create the object using class argparse
 
-# Add options
+# Mandatory options
 parser.add_argument('assembly', help="Fasta file to extract from")
-parser.add_argument('query', help="Fasta file of the query sequence in nucleotides (one sequence expected unless --seqid is active)")
-
+parser.add_argument('query', help="Fasta file of the query sequence(s) in nucleotides")
+# BLAST options
 parser.add_argument("--haplo", "-H", help="Use sequence(s) in query to try to extract haplotypes instead", default=False, action='store_true')
+parser.add_argument("--task", "-T", help="Task for the blastn program. Default is 'blastn', other options are 'blastn-short', 'dc-megablast', 'megablast' or 'vecscreen'", type=str, default="blastn")
+parser.add_argument("--evalue", "-e", help="Minimum e-value of BLAST hit to be consider (default 10)", type=int, default=10)
+# More filtering options
 parser.add_argument("--extrabp", "-f", help="Extra base pairs cut next to the start and end of the BLAST hits (default 0)", type=int, default=0)
 parser.add_argument("--minsize", "-s", help="Minimum size of BLAST hit to be consider (default 0 bp)", type=int, default=0)
 parser.add_argument("--vicinity", "-c", help="Max distance between 5 and 3 end hits to form a haplotype (default 10000 bp)", type=int, default=10000)
 parser.add_argument("--minhaplo", "-m", help="Minimum size of haplotype size (default 0 bp)", type=int, default=0)
-
-parser.add_argument('--version', "-v", action='version', version='%(prog)s ' + versiondisplay)
-
-# From query2hitseq.py
+# Extras
 parser.add_argument("--seqid", "-i", help="Name of query gene to be extracted from the input multifasta QUERY file. eg. Pa_6_4990", type=str)
-parser.add_argument('--temp', '-u', help="Path and directory where temporary files are written in style path/to/dir/. Default: working directory", default='./')
-parser.add_argument("--evalue", "-e", help="Minimum size of BLAST hit to be consider (default 1 bp)", type=int, default=10)
 parser.add_argument("--threads", "-t", help="Number of threads for BLAST. Default: 1", default="1", type=int) # nargs='+' All, and at least one, argument
-parser.add_argument('--clean', '-C', help="Erase the created directories and files when finish", default=False, action='store_true')
-
+parser.add_argument('--temp', '-u', help="Path and directory where temporary files are written in style path/to/dir/. Default: working directory", default='./')
+parser.add_argument('--clean', '-C', help="Erase the temporary directories and files when finish", default=False, action='store_true')
+parser.add_argument('--version', "-v", action='version', version='%(prog)s ' + versiondisplay)
 
 try:
 	# ArgumentParser parses arguments through the parse_args() method You can
@@ -117,7 +116,7 @@ if args.seqid:
 		print("\tNo match for " + args.seqid + "! Exiting ...")
 		sys.exit(1)
 else:
-	queryseq = list(query_dict.keys()) #[0] #  Take the first sequence
+	queryseq = list(query_dict.keys())
 
 # -----------------------------------
 # BLAST query
@@ -135,11 +134,11 @@ if not os.path.isdir(args.temp + nameref + '_db/'): # If it exist already, don't
 if args.seqid: # Only one sequence
 	outputhits = args.temp + queryseq.id + "VS" + nameref + "-" + "hits.tab"
 	query_string = '>' + queryseq.id + '\n' + str(queryseq.seq)
-	blast_command = NcbiblastnCommandline(cmd='blastn', out=outputhits, outfmt=6, db=databasename, evalue=args.evalue, num_threads=args.threads)
+	blast_command = NcbiblastnCommandline(cmd='blastn', out=outputhits, outfmt=6, db=databasename, evalue=args.evalue, num_threads=args.threads, task=args.task)
 	stdout, stderr = blast_command(stdin=query_string)
 else: # Multifasta
 	outputhits = args.temp + nameqry + "VS" + nameref + "-" + "hits.tab"
-	blast_command = NcbiblastnCommandline(query=args.query, cmd='blastn', out=outputhits, outfmt=6, db=databasename, evalue=args.evalue, num_threads=args.threads, task='blastn')
+	blast_command = NcbiblastnCommandline(query=args.query, cmd='blastn', out=outputhits, outfmt=6, db=databasename, evalue=args.evalue, num_threads=args.threads, task=args.task)
 	stdout, stderr = blast_command()
 
 # Read back
