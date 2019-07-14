@@ -2,7 +2,6 @@
 # encoding: utf-8
 
 # ================== gffutils2fasta =================
-
 # Script to extract fasta subsequences out of an input fasta file using a
 # corresponding GFF3 file.
 # The script assumes there are no repeated sequences in the fasta file. Also
@@ -34,7 +33,7 @@ import re
 import gffutils
 # ------------------------------------------------------
 
-version = 1.3
+version = 1.31
 versiondisplay = "{0:.2f}".format(version)
 supportedtypes = ["gene", "CDS", "exon", "noutrs", "similarity", "expressed_sequence_match"] # Unlike the CDS, Exons may contain the UTRs; noutrs is from start to stop codon without introns in nuleotides
 
@@ -141,16 +140,16 @@ def getseqbasic(dbobject, seq_record, extrabp = args.extrabp):
 	return(dbobjectseq)
 
 def seqnamer(geneID, genename, geneseq, typeseq = args.type): #, onlyids = args.onlyids, onlynames = args.onlynames):
-		""" Rename sequence so it's not the chromosome name """
-		if args.onlyids: # Name of the output
-			geneseq.id = geneID
-			geneseq.description = ''
-		elif args.onlynames: # Name of the output
-			geneseq.id = genename
-			geneseq.description = ''
-		else:
-			geneseq.id = geneID + '|' + genename + '|' + typeseq + '|'	
-		return(geneseq)
+	""" Rename sequence so it's not the chromosome name """
+	if args.onlyids: # Name of the output
+		geneseq.id = geneID
+		geneseq.description = ''
+	elif args.onlynames: # Name of the output
+		geneseq.id = genename
+		geneseq.description = ''
+	else:
+		geneseq.id = geneID + '|' + genename + '|' + typeseq + '|'	
+	return(geneseq)
 
 # ---------------------------
 ## Retrieve the desire features
