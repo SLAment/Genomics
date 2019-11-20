@@ -26,8 +26,9 @@ import sys # To exit the script
 import os # For the input name
 import argparse  # For the fancy options
 from argparse import RawTextHelpFormatter # To force argparse.ArgumentParser to recognize \n
+import datetime
 # ------------------------------------------------------
-version = 3.21
+version = 4.00
 versiondisplay = "{0:.2f}".format(version)
 
 # ============================
@@ -37,8 +38,8 @@ parser = argparse.ArgumentParser(description="* Slice a GFF3 file *", epilog="Th
 
 # Add options
 parser.add_argument('GFF', help="GFF3 file sorted beforehand")
-parser.add_argument('inputstart', help="The coordinate of the new start, base 0 inclusive!", type=int)
-parser.add_argument('inputend', help="The coordinate of the new end, base 0 inclusive! (default inf)", default=float('inf'), nargs='?', type=int) # nargs='?' makes it optional
+parser.add_argument('inputstart', help="The coordinate of the new start, base 1 inclusive!", type=int)
+parser.add_argument('inputend', help="The coordinate of the new end, base 1 inclusive! (default inf)", default=float('inf'), nargs='?', type=int) # nargs='?' makes it optional
 
 parser.add_argument("--outputname", "-o", help="Output name set by the user")
 parser.add_argument('--keepcoords', '-k', help="Slice the GFF3 file but without correcting the coordinates", default=False, action='store_true')
@@ -58,46 +59,51 @@ except IOError as msg:  # Check that the file exists
 	parser.print_help()
 # ============================
 
+## Make the coordinates base 0 (input should be base 1)
+if args.inputstart > args.inputend: # Inverted coordinates
+	inputstart = args.inputend - 1
+	inputend = args.inputstart - 1
+else:
+	inputstart = args.inputstart - 1
+	inputend = args.inputend - 1
+
 # ---------------------------------
 # Name of output
 # ---------------------------------
 if not args.outputname:
 	input_base = os.path.splitext(args.GFF)[0] # Taking out the prefix of the file
 	input_name = os.path.basename(input_base) # Remove the path
-	newgff = open(input_name + '_Slice_' + str(args.inputstart) + '_' + str(args.inputend) +'.gff', "w")
+	newgff = open(input_name + '_Slice_' + str(inputstart + 1) + '_' + str(inputend + 1) +'.gff', "w")
 else:
 	newgff =  open(args.outputname, "w")
 # ---------------------------------
 
 # --------
-# newgff.write("##gff-version 3\n")
-newhead = '# Sliced from ' + os.path.basename(args.GFF) +'\n'
-headdone = True
-
 goodlines = []
 
 for line in GFFopen:
 	# print(line)
-	if '##' in line:
+	if '##gff-version 3' in line: 
 		goodlines.append(line)
+		# Add a line to mark the file with this script
+		now = datetime.datetime.now()
+		gffslicerstr = "# Sliced from " + os.path.basename(args.GFF) + " using " + os.path.basename(sys.argv[0]) + " v. " + str(versiondisplay) + ' on ' + str(now) + '\n'
+		goodlines.append(gffslicerstr)
 	elif '#' in line:
 		goodlines.append(line)
-		if headdone:
-			goodlines.append(newhead)
-			headdone = False
 	elif line == '\n': # If the line is empty
 		pass		
-	elif '>' in line: # We reached a fasta sequence
+	elif '>' in line: # We reached a fasta sequence (assumes the gff stops there)
 		break # Stop reading everything.
-	else:		
+	else:
 		cols = line.rstrip("\n").split("\t")		# break the line into columns defined by the tab
 
 		currentstart = int(cols[3])
 		currentend = int(cols[4])
 
 		if args.addcoords: # Append the start to the coordinates instead of slicing
-			newstart = currentstart + args.inputstart
-			newend = currentend + args.inputstart
+			newstart = currentstart + inputstart
+			newend = currentend + inputstart
 
 			newcols = cols # Put the new coordinates in
 			newcols[3:5] = str(newstart), str(newend)
@@ -106,18 +112,17 @@ for line in GFFopen:
 			goodlines.append(newline)
 
 		else:
-
 			# Check that the feature is inside the slice range
-			if (currentstart <= args.inputstart): # args.inputstart is Base 0
+			if (currentstart <= inputstart): # inputstart is Base 0
 				continue # If not, ignore this line
-			elif (currentend >= args.inputend): # Breaking here will prevent orphan exons that can fit the range of a last gene that in totally doesn't
+			elif (currentend >= inputend): # Breaking here will prevent orphan exons that can fit the range of a last gene that in totally doesn't
 				break
 			else: # It it is in range, keep it while fixing the coordinates
 				if args.keepcoords: # Leave the coordinates as in the input file
 					goodlines.append(line)
 				else: # Correct them to match the new range
-					newstart = currentstart - args.inputstart
-					newend = currentend - args.inputstart
+					newstart = currentstart - inputstart
+					newend = currentend - inputstart
 
 					newcols = cols # Put the new coordinates in
 					newcols[3:5] = str(newstart), str(newend)
