@@ -28,7 +28,7 @@ import argparse  # For the fancy options
 from argparse import RawTextHelpFormatter # To force argparse.ArgumentParser to recognize \n
 import datetime
 # ------------------------------------------------------
-version = 4.00
+version = 4.01
 versiondisplay = "{0:.2f}".format(version)
 
 # ============================
@@ -43,6 +43,7 @@ parser.add_argument('inputend', help="The coordinate of the new end, base 1 incl
 
 parser.add_argument("--outputname", "-o", help="Output name set by the user")
 parser.add_argument('--keepcoords', '-k', help="Slice the GFF3 file but without correcting the coordinates", default=False, action='store_true')
+parser.add_argument('--invertcoords', '-i', help="Slice the GFF3 file but invert the coordinates (for reverse-complemented sequences); DOES NOT WORK FOR CDS", default=False, action='store_true')
 
 parser.add_argument('--addcoords', '-a', help="Add the value of inputstart to the coordinates instead of slicing (provide any number as end)", default=False, action='store_true')
 
@@ -81,8 +82,7 @@ else:
 # --------
 goodlines = []
 
-for line in GFFopen:
-	# print(line)
+for line in GFFopen: # Without saving in memory, but then I can't access the next line so easily
 	if '##gff-version 3' in line: 
 		goodlines.append(line)
 		# Add a line to mark the file with this script
@@ -101,11 +101,13 @@ for line in GFFopen:
 		currentstart = int(cols[3])
 		currentend = int(cols[4])
 
+		# Make a new one to replace values into it
+		newcols = cols 
+
 		if args.addcoords: # Append the start to the coordinates instead of slicing
 			newstart = currentstart + inputstart
 			newend = currentend + inputstart
 
-			newcols = cols # Put the new coordinates in
 			newcols[3:5] = str(newstart), str(newend)
 
 			newline = '\t'.join(newcols) + '\n' # Stitch it together as a line
@@ -113,19 +115,33 @@ for line in GFFopen:
 
 		else:
 			# Check that the feature is inside the slice range
-			if (currentstart <= inputstart): # inputstart is Base 0
+			if (currentstart <= inputstart + 1): # inputstart is Base 0
 				continue # If not, ignore this line
-			elif (currentend >= inputend): # Breaking here will prevent orphan exons that can fit the range of a last gene that in totally doesn't
+			elif (currentend >= inputend + 1): # Breaking here will prevent orphan exons that can fit the range of a last gene that doesn't fully
 				break
 			else: # It it is in range, keep it while fixing the coordinates
 				if args.keepcoords: # Leave the coordinates as in the input file
 					goodlines.append(line)
-				else: # Correct them to match the new range
-					newstart = currentstart - inputstart
-					newend = currentend - inputstart
+				else: # Correct them to match the new range				
+					# ----
+					if args.invertcoords: # EXPERIMENTAL; Let's assume the gene is sorted
+						newstart = (inputend + 1) - currentend + 1 # The plus one makes sure that it stays in base 1 (inputend is base 0)
+						newend = (inputend + 1) - currentstart + 1
 
-					newcols = cols # Put the new coordinates in
-					newcols[3:5] = str(newstart), str(newend)
+						# The strand has to be inverted too
+						strand = cols[6]
+						if strand == "+":
+							newcols[6] = "-"
+
+						elif strand == "-":
+							newcols[6] = "+"
+
+					else:
+					# ----
+						newstart = currentstart - inputstart
+						newend = currentend - inputstart			
+
+					newcols[3:5] = str(newstart), str(newend) # Put the new coordinates in
 
 					newline = '\t'.join(newcols) + '\n' # Stitch it together as a line
 					goodlines.append(newline)
@@ -136,7 +152,7 @@ initialbrokengen = []
 for line in goodlines:
 	if '#' in line:
 		continue
-	elif 'Parent=' in line: 
+	elif 'Parent=' in line:
 		initialbrokengen.append(line)
 	else:
 		break
