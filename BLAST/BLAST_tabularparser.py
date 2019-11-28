@@ -28,7 +28,7 @@ import os # For the input name
 import argparse # For the fancy options
 from collections import defaultdict #This tells python that the dictionary contains a list so you can freely append things to the value of each key
 # ------------------------------------------------------
-version = 2.10
+version = 2.2
 versiondisplay = "{0:.3f}".format(version)
 
 # Make a nice menu for the user
@@ -56,13 +56,13 @@ try:
 	# parse_args(). By default, the arguments are taken from sys.argv[1:]
 	args = parser.parse_args()
 	tabopen = open(args.tabfile, 'rU')
-except IOError, msg:  # Check that the file exists
+except IOError as msg:  # Check that the file exists
     parser.error(str(msg)) 
     parser.print_help()
 
 if args.verbose:
 	print 
-	print "Input tab file: ", args.tabfile
+	print("Input tab file: " + args.tabfile)
 
 # ------------------------------------------------------
 def print_table( list_thing, output_name="output.txt", header='' ):
@@ -70,7 +70,7 @@ def print_table( list_thing, output_name="output.txt", header='' ):
 	if header != '':
 		ofile.write((header+'\n'))
 	# else:
-	# 	print "No header"
+	# 	print("No header")
 	for line in list_thing:
 		hitstring = ''
 		for tab in line:
@@ -121,7 +121,7 @@ elif args.postdoug and not args.headerinput:
 if headercondition:
 	startingpoint = 1
 	if args.verbose:
-		print "** Header active **"
+		print("** Header active **")
 else:
 	startingpoint = 0
 
@@ -143,7 +143,7 @@ else:
 	# filteredtab = [line for line in tabs[startingpoint:] if int(line[10]) >= args.hsp] 		# Filter the tab file with hsp_length
 	for line in tabs[startingpoint:]:
 		if "No hit" in line:
-			# print "Query with No hit found"
+			# print("Query with No hit found")
 			nohitcounter += 1
 			filteredtab.append(line)
 		else:
@@ -152,7 +152,7 @@ else:
 
 # Report it
 if args.hsp != 0 and args.verbose:
-	print "   Minimum HSP length set to %d bp" % args.hsp
+	print("   Minimum HSP length set to %d bp" % args.hsp)
 
 # ------------------------------------------------------
 # Make a dictionary with the tab file for each query
@@ -229,10 +229,10 @@ if args.Nhits or args.hitfrac or (args.evalue < 10) or args.filterstring:
 
 # Report some figures if required
 if args.verbose:
-	if args.Nhits: print "   Max No. of hits kept per query: %d" % args.Nhits
-	if (args.evalue < 10): print "   Minimum e-value set to %f" % args.evalue
-	if args.hitfrac: print "   Minimum hit fraction set to %f" % args.hitfrac
-	if (args.identity > 0): print "   Minimum percentage of identity set to %.2f" % args.identity
+	if args.Nhits: print("   Max No. of hits kept per query: %d" % args.Nhits)
+	if (args.evalue < 10): print("   Minimum e-value set to %f" % args.evalue)
+	if args.hitfrac: print("   Minimum hit fraction set to %f" % args.hitfrac)
+	if (args.identity > 0): print("   Minimum percentage of identity set to %.2f" % args.identity)
 
 # ------------------------------------------------------
 # Print filtered tab file
@@ -263,8 +263,8 @@ if args.verbose:
 	hitsinput = defaultdict(list) #This tells python that the dictionary contains a list so you can freely append things to the value of each key
 	for line in tabs[startingpoint:]:
 		hitsinput[line[0]].append(line[1:])
-	print "\tNumber of input query sequences: ", len(hitsinput.keys())
-	print "\tNumber of input hits: ", len(tabs) - startingpoint
+	print("\tNumber of input query sequences: " + str(len(hitsinput.keys())))
+	print("\tNumber of input hits: " + str(len(tabs) - startingpoint))
 	print 
 
 	# Output
@@ -272,14 +272,14 @@ if args.verbose:
 	for line in filteredtab:
 		hitsoutput[line[0]].append(line[1:])
 
-	print "\tNumber of output query sequences: ", len(hitsoutput.keys())
-	print "\tNumber of output true hits: ", len(filteredtab) - nohitcounter # True in oposition of having no hit at all but still being in the file
-	print "\tNumber of queries without any hits: ", nohitcounter
+	print("\tNumber of output query sequences: ", len(hitsoutput.keys()))
+	print("\tNumber of output true hits: ", len(filteredtab) - nohitcounter) # True in oposition of having no hit at all but still being in the file
+	print("\tNumber of queries without any hits: ", nohitcounter)
 
 	if args.postdoug and (args.Nhits or args.hitfrac or (args.evalue < 10)): 
-		print "\tNumber of hits with %s in description: %i" % (badwords, hypo)
+		print("\tNumber of hits with %s in description: %i" % (badwords, hypo))
 	# ------------------------------------------------------
 	# The end
 	# ------------------------------------------------------
-	print "Output tab file: ", output_name_tab
+	print("Output tab file: " + output_name_tab)
 	print
