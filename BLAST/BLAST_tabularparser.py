@@ -28,7 +28,7 @@ import os # For the input name
 import argparse # For the fancy options
 from collections import defaultdict #This tells python that the dictionary contains a list so you can freely append things to the value of each key
 # ------------------------------------------------------
-version = 2.2
+version = 2.21
 versiondisplay = "{0:.3f}".format(version)
 
 # Make a nice menu for the user
@@ -55,7 +55,7 @@ try:
 	# parse the command line by passing a sequence of argument strings to
 	# parse_args(). By default, the arguments are taken from sys.argv[1:]
 	args = parser.parse_args()
-	tabopen = open(args.tabfile, 'rU')
+	tabopen = open(args.tabfile, 'r')
 except IOError as msg:  # Check that the file exists
     parser.error(str(msg)) 
     parser.print_help()
