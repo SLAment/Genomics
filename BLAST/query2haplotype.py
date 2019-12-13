@@ -23,7 +23,7 @@ import subprocess # For the database
 from shutil import rmtree # For removing directories
 import argparse # For the fancy options
 # ------------------------------------------------------
-version = 1
+version = 1.1
 versiondisplay = "{0:.2f}".format(version)
 
 # Make a nice menu for the user
@@ -35,7 +35,7 @@ parser.add_argument('query', help="Fasta file of the query sequence(s) in nucleo
 # BLAST options
 parser.add_argument("--haplo", "-H", help="Use sequence(s) in query to try to extract haplotypes instead", default=False, action='store_true')
 parser.add_argument("--task", "-T", help="Task for the blastn program. Default is 'blastn', other options are 'blastn-short', 'dc-megablast', 'megablast' or 'vecscreen'", type=str, default="blastn")
-parser.add_argument("--evalue", "-e", help="Minimum e-value of BLAST hit to be consider (default 10)", type=int, default=10)
+parser.add_argument("--evalue", "-e", help="Minimum e-value of BLAST hit to be consider (default 10)", type=float, default=10)
 # More filtering options
 parser.add_argument("--extrabp", "-f", help="Extra base pairs cut next to the start and end of the BLAST hits (default 0)", type=int, default=0)
 parser.add_argument("--minsize", "-s", help="Minimum size of BLAST hit to be consider (default 0 bp)", type=int, default=0)
