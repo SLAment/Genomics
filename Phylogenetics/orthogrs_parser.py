@@ -15,17 +15,17 @@
 import argparse # For the fancy options
 import random
 # ------------------------------------------------------
-version = 1.3
+version = 1.31
 versiondisplay = "{0:.2f}".format(version)
 
 # Make a nice menu for the user
-parser = argparse.ArgumentParser(description="* Parse Orthogroups.csv for Podospora *", epilog="") # Create the object using class argparse
+parser = argparse.ArgumentParser(description="* Parse Orthogroups.csv for Podospora *", epilog="The result is two files, one with the selected orthogroups, and another with the name of the genes for each orthogroup present in the reference sample (default Podan2).") # Create the object using class argparse
 
 # Add options
 parser.add_argument('orthogrscsv', help="The Orthogroups.csv output file of Orthofinder")
 parser.add_argument("--ref", "-r", help="Reference sample. Default: Podan2", default="Podan2")
 parser.add_argument("--nugrps", "-n", help="Number of orthologs per species per orthogroup. Default: 1", type=int, default=1)
-parser.add_argument("--sample", "-s", help="Sample this number of orthologs. Default: all", type=int, default=float('inf'))
+parser.add_argument("--sample", "-s", help="Sample this number of orthologs randomly. Default: all", type=int, default=float('inf'))
 parser.add_argument("--outputdir", "-o", help="Path for output directory", default = ".")
 parser.add_argument('--version', "-v", action='version', version='%(prog)s ' + versiondisplay)
 parser.add_argument('--verbose', '-b', help="Give some extra information", default=False, action='store_true')
