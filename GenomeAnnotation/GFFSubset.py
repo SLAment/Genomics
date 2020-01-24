@@ -19,7 +19,7 @@ import gffutils
 import datetime
 import time
 # ------------------------------------------------------
-version = 1.0
+version = 1.1
 versiondisplay = "{0:.2f}".format(version)
 
 # Input from console
@@ -84,7 +84,10 @@ for strid in geneids:
 		printgene(gene)
 
 	except: # Then try gene Name
+		# Sometimes the same gene is there for different features
 		for gene in db.features_of_type('gene'): # Loop in the database until you fins it
 			genename = gene['Name'][0] # same as gene.attributes['Name'][0]
-			if strid in genename: 
+			if strid == genename: 
 				printgene(gene)
+
+
