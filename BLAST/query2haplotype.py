@@ -23,7 +23,7 @@ import subprocess # For the database
 from shutil import rmtree # For removing directories
 import argparse # For the fancy options
 # ------------------------------------------------------
-version = 1.1
+version = 1.2
 versiondisplay = "{0:.2f}".format(version)
 
 # Make a nice menu for the user
@@ -42,6 +42,7 @@ parser.add_argument("--minsize", "-s", help="Minimum size of BLAST hit to be con
 parser.add_argument("--vicinity", "-c", help="Max distance between 5 and 3 end hits to form a haplotype (default 10000 bp)", type=int, default=10000)
 parser.add_argument("--minhaplo", "-m", help="Minimum size of haplotype size (default 0 bp)", type=int, default=0)
 # Extras
+parser.add_argument("--blastab", "-b", help="The query is not a fasta, but a BLAST tab file to be used directly instead of doing the whole BLAST", default=False, action='store_true')
 parser.add_argument("--seqid", "-i", help="Name of query gene to be extracted from the input multifasta QUERY file. eg. Pa_6_4990", type=str)
 parser.add_argument("--threads", "-t", help="Number of threads for BLAST. Default: 1", default="1", type=int) # nargs='+' All, and at least one, argument
 parser.add_argument('--temp', '-u', help="Path and directory where temporary files are written in style path/to/dir/. Default: working directory", default='./')
@@ -121,28 +122,32 @@ else:
 # -----------------------------------
 # BLAST query
 # -----------------------------------
-# Define the names of the databases
-nameref = namebase(args.assembly)
-nameqry = namebase(args.query)
-databasename = args.temp + nameref + '_db/' + nameref + '_db'
 
-# Make the local BLAST databases
-if not os.path.isdir(args.temp + nameref + '_db/'): # If it exist already, don't bother
-	makeBLASTdb(args.assembly, databasename, 'nucl')
+if not args.blastab:
+	# Define the names of the databases
+	nameref = namebase(args.assembly)
+	nameqry = namebase(args.query)
+	databasename = args.temp + nameref + '_db/' + nameref + '_db'
 
-# BLAST
-if args.seqid: # Only one sequence
-	outputhits = args.temp + queryseq.id + "VS" + nameref + "-" + "hits.tab"
-	query_string = '>' + queryseq.id + '\n' + str(queryseq.seq)
-	blast_command = NcbiblastnCommandline(cmd='blastn', out=outputhits, outfmt=6, db=databasename, evalue=args.evalue, num_threads=args.threads, task=args.task)
-	stdout, stderr = blast_command(stdin=query_string)
-else: # Multifasta
-	outputhits = args.temp + nameqry + "VS" + nameref + "-" + "hits.tab"
-	blast_command = NcbiblastnCommandline(query=args.query, cmd='blastn', out=outputhits, outfmt=6, db=databasename, evalue=args.evalue, num_threads=args.threads, task=args.task)
-	stdout, stderr = blast_command()
+	# Make the local BLAST databases
+	if not os.path.isdir(args.temp + nameref + '_db/'): # If it exist already, don't bother
+		makeBLASTdb(args.assembly, databasename, 'nucl')
 
-# Read back
-tabs = [line.rstrip("\n").split("\t") for line in open(outputhits, 'r')] 			# Read tab file into a list
+	# BLAST
+	if args.seqid: # Only one sequence
+		outputhits = args.temp + queryseq.id + "VS" + nameref + "-" + "hits.tab"
+		query_string = '>' + queryseq.id + '\n' + str(queryseq.seq)
+		blast_command = NcbiblastnCommandline(cmd='blastn', out=outputhits, outfmt=6, db=databasename, evalue=args.evalue, num_threads=args.threads, task=args.task)
+		stdout, stderr = blast_command(stdin=query_string)
+	else: # Multifasta
+		outputhits = args.temp + nameqry + "VS" + nameref + "-" + "hits.tab"
+		blast_command = NcbiblastnCommandline(query=args.query, cmd='blastn', out=outputhits, outfmt=6, db=databasename, evalue=args.evalue, num_threads=args.threads, task=args.task)
+		stdout, stderr = blast_command()
+
+	# Read back
+	tabs = [line.rstrip("\n").split("\t") for line in open(outputhits, 'r')] 			# Read tab file into a list
+else:
+	tabs = [line.rstrip("\n").split("\t") for line in open(args.query, 'r')] 			# Read tab file into a list
 
 # -----------------------------------
 # Get haplotype
