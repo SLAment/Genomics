@@ -6,12 +6,11 @@
 # making them relative to the start of a given coordinate. The script is meant
 # to be used along with fastaSlicer.py, for example.
 
-# I didn't consider the issue with the contig in turn. As it is, GFFSlicer.py
-# can only work with GFF files of a single chromosome. Further improvement
-# could be to make an option to extend the coordinates of a GFF file, instead
-# of reducing them.
+# The default is to assume there is a single contig in the gff, but if not
+# then the contig of insterest can be specified (-c)
 
 # Version 3: change from python2 to python3
+# Version 4: change to base 1 and add a few new functions
 
 # TODO: an option to take a specific contig for the gff
 # ==================================================
@@ -28,7 +27,7 @@ import argparse  # For the fancy options
 from argparse import RawTextHelpFormatter # To force argparse.ArgumentParser to recognize \n
 import datetime
 # ------------------------------------------------------
-version = 4.01
+version = 4.02
 versiondisplay = "{0:.2f}".format(version)
 
 # ============================
@@ -41,6 +40,7 @@ parser.add_argument('GFF', help="GFF3 file sorted beforehand")
 parser.add_argument('inputstart', help="The coordinate of the new start, base 1 inclusive!", type=int)
 parser.add_argument('inputend', help="The coordinate of the new end, base 1 inclusive! (default inf)", default=float('inf'), nargs='?', type=int) # nargs='?' makes it optional
 
+parser.add_argument("--contig", "-c", help="Name of the contig that should be sliced (otherwise it will assume there is only one contig in the gff)")
 parser.add_argument("--outputname", "-o", help="Output name set by the user")
 parser.add_argument('--keepcoords', '-k', help="Slice the GFF3 file but without correcting the coordinates", default=False, action='store_true')
 parser.add_argument('--invertcoords', '-i', help="Slice the GFF3 file but invert the coordinates (for reverse-complemented sequences); DOES NOT WORK FOR CDS", default=False, action='store_true')
@@ -60,21 +60,15 @@ except IOError as msg:  # Check that the file exists
 	parser.print_help()
 # ============================
 
-## Make the coordinates base 0 (input should be base 1)
-if args.inputstart > args.inputend: # Inverted coordinates
-	inputstart = args.inputend - 1
-	inputend = args.inputstart - 1
-else:
-	inputstart = args.inputstart - 1
-	inputend = args.inputend - 1
-
+inputstart = args.inputstart 
+inputend = args.inputend
 # ---------------------------------
 # Name of output
 # ---------------------------------
 if not args.outputname:
 	input_base = os.path.splitext(args.GFF)[0] # Taking out the prefix of the file
 	input_name = os.path.basename(input_base) # Remove the path
-	newgff = open(input_name + '_Slice_' + str(inputstart + 1) + '_' + str(inputend + 1) +'.gff', "w")
+	newgff = open(input_name + '_Slice_' + str(inputstart) + '_' + str(inputend) +'.gff', "w")
 else:
 	newgff =  open(args.outputname, "w")
 # ---------------------------------
@@ -98,6 +92,12 @@ for line in GFFopen: # Without saving in memory, but then I can't access the nex
 	else:
 		cols = line.rstrip("\n").split("\t")		# break the line into columns defined by the tab
 
+		contig = cols[0]
+
+		if args.contig: # Is this the contig of interest?			
+			if contig != args.contig: # If not, ignore the rest
+				continue
+
 		currentstart = int(cols[3])
 		currentend = int(cols[4])
 
@@ -115,9 +115,9 @@ for line in GFFopen: # Without saving in memory, but then I can't access the nex
 
 		else:
 			# Check that the feature is inside the slice range
-			if (currentstart <= inputstart + 1): # inputstart is Base 0
+			if (currentstart < inputstart):
 				continue # If not, ignore this line
-			elif (currentend >= inputend + 1): # Breaking here will prevent orphan exons that can fit the range of a last gene that doesn't fully
+			elif (currentend > inputend): # Breaking here will prevent orphan exons that can fit the range of a last gene that doesn't fully
 				break
 			else: # It it is in range, keep it while fixing the coordinates
 				if args.keepcoords: # Leave the coordinates as in the input file
@@ -125,8 +125,8 @@ for line in GFFopen: # Without saving in memory, but then I can't access the nex
 				else: # Correct them to match the new range				
 					# ----
 					if args.invertcoords: # EXPERIMENTAL; Let's assume the gene is sorted
-						newstart = (inputend + 1) - currentend + 1 # The plus one makes sure that it stays in base 1 (inputend is base 0)
-						newend = (inputend + 1) - currentstart + 1
+						newstart = (inputend) - currentend 
+						newend = (inputend) - currentstart
 
 						# The strand has to be inverted too
 						strand = cols[6]
@@ -139,13 +139,14 @@ for line in GFFopen: # Without saving in memory, but then I can't access the nex
 					else:
 					# ----
 						newstart = currentstart - inputstart
-						newend = currentend - inputstart			
+						newend = currentend - inputstart		
 
-					newcols[3:5] = str(newstart), str(newend) # Put the new coordinates in
-
+					# Put the new coordinates in 
+					newcols[3:5] = str(newstart + 1), str(newend + 1) # The plus one makes sure that it stays in base 1 (inputend is base 0)
+					
 					newline = '\t'.join(newcols) + '\n' # Stitch it together as a line
 					goodlines.append(newline)
-# --------
+		# --------
 # Remove the initial left overs of the previous gene
 initialbrokengen = []
 
