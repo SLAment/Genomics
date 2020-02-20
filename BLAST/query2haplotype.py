@@ -201,7 +201,8 @@ if args.haplo: # We are looking for entire haplotypes and the blast is only the 
 				# Slice it 
 				slice = hitseq[start_final:end_final]
 				# Rename it so it's nice
-				slice.id = hitseq.id + "_Slice_" + str(start_final + 1) + "_" + str(end_final)
+				slice.id = hitseq.id + "_" + str(start_final + 1) + "-" + str(end_final)
+				# slice.id = hitseq.id + "_Slice_" + str(start_final + 1) + "-" + str(end_final)
 				slice.description = ''
 				# Save it in the list
 				slices.append(slice)
@@ -233,7 +234,8 @@ else: # The BLAST hits themselves are the haplotypes
 			# Slice it 
 			slice = hitseq[start_final:end_final]
 			# Rename it so it's nice
-			slice.id = hitseq.id + "_Slice_" + str(start_final + 1) + "_" + str(end_final)
+			slice.id = hitseq.id + "_" + str(start_final + 1) + "-" + str(end_final)
+			# slice.id = hitseq.id + "_Slice_" + str(start_final + 1) + "-" + str(end_final)
 			slice.description = ''
 			# Save it in the list
 			slices.append(slice)
