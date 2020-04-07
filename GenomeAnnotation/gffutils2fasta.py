@@ -120,7 +120,7 @@ records_dict = SeqIO.to_dict(SeqIO.parse(fastaopen, "fasta", generic_dna))
 # Names for input and output
 # ---------------------------
 if args.output: # User defined
-	output_handle = open(args.output + '.fas', "w")
+	output_handle = open(args.output, "w")
 else:
 	input_name = os.path.splitext(args.GFF)[0]
 	input_name = os.path.basename(input_name) # Put the output in the working directory, not in the input dir
