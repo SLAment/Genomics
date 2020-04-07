@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
+# import time
+# start_time = time.time()
+
 # ================== gffutils2fasta =================
 # Script to extract fasta subsequences out of an input fasta file using a
 # corresponding GFF3 file.
@@ -33,7 +36,7 @@ import re
 import gffutils
 # ------------------------------------------------------
 
-version = 1.31
+version = 1.4
 versiondisplay = "{0:.2f}".format(version)
 supportedtypes = ["gene", "CDS", "exon", "noutrs", "similarity", "expressed_sequence_match"] # Unlike the CDS, Exons may contain the UTRs; noutrs is from start to stop codon without introns in nuleotides
 
@@ -48,7 +51,7 @@ parser.add_argument('GFF', help="GFF3 file")
 parser.add_argument("--type", "-t", help="The feature you want to extract. Options are: "+str(supportedtypes)+", Default: gene. Notice that 'exon' would include the UTRs if present (eg. MAKER output). The option 'noutrs' includes all the body of the gene, except UTRs.", default='gene', choices = supportedtypes)
 parser.add_argument('--proteinon', '-p', help="Return protein sequences (only useful for CDS)", default=False, action='store_true')
 parser.add_argument('--join', '-j', help="Join together the features that belong to a single gene (only useful for CDS and exon)", default=False, action='store_true')
-# parser.add_argument('--specificgene', '-g', help="Extract only this specific gene or list of genes separated by commas and no spaces (give ID or Name of gene)") #, default='')
+parser.add_argument('--specificgene', '-g', help="Extract only this specific gene or list of genes separated by commas and no spaces (give ID or Name of gene)") 
 parser.add_argument("--extrabp", "-e", help="Extra base pairs on the side (only works with -t gene, default 0)", type=int, default=0)
 
 parser.add_argument("--onlyids", "-n", help="Only keep the name of the gene ID in the output", default=False, action='store_true')
@@ -113,8 +116,6 @@ db = gffutils.create_db(data = args.GFF,
 # This stores in memory
 records_dict = SeqIO.to_dict(SeqIO.parse(fastaopen, "fasta", generic_dna))
 
-# print(records_dict)
-
 # ---------------------------
 # Names for input and output
 # ---------------------------
@@ -150,6 +151,12 @@ def seqnamer(geneID, genename, geneseq, typeseq = args.type): #, onlyids = args.
 	else:
 		geneseq.id = geneID + '|' + genename + '|' + typeseq + '|'	
 	return(geneseq)
+
+# ---------------------------
+## Only look for some specific gene
+# ---------------------------
+if args.specificgene: # Only one specific gene, or string of genes, is required
+	focalgenes = [gene for gene in args.specificgene.split(",")]
 
 # ---------------------------
 ## Retrieve the desire features
@@ -188,6 +195,9 @@ else:
 		geneID = gene['ID'][0]
 		genename = gene['Name'][0] # same as gene.attributes['Name'][0]
 		seq_record = records_dict[gene.chrom] # The chromosome sequence
+
+		if args.specificgene and ((geneID not in focalgenes) and (genename not in focalgenes)):
+			continue # If the gene is not in the user's list, then skip the rest of the code and go to the next gene
 
 		if args.type == 'gene':
 			geneseq = getseqbasic(gene, seq_record) # Get the sequence for this gene
@@ -408,6 +418,6 @@ A GFF3 file has the following fields
 # 		print(child)
 # --------------------------------------------
 
-
+# print("--- %s seconds ---" % (time.time() - start_time))
 
 
