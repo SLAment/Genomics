@@ -48,6 +48,8 @@ THRESHOLD = 150 # A threshold for the distance between two hits to be distinct l
 # Make a dictionary with the elements of each contig
 contigdic = {}
 for line in gffopen:
+	if '#' in line:
+		continue
 	cols = line.rstrip("\n").split("\t")
 	contig = cols[0]
 
