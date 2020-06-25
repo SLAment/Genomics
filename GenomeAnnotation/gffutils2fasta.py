@@ -193,7 +193,14 @@ else:
 	for gene in db.features_of_type('gene'):
 		# dir(gene) --> 'astuple', 'attributes', 'bin', 'calc_bin', 'chrom', 'dialect', 'end', 'extra', 'featuretype', 'file_order', 'frame', 'id', 'keep_order', 'score', 'seqid', 'sequence', 'sort_attribute_values', 'source', 'start', 'stop', 'strand'
 		geneID = gene['ID'][0]
-		genename = gene['Name'][0] # same as gene.attributes['Name'][0]
+
+		## -- Some gffs don't have a name feature (eg. funannotate output)
+		try:
+			genename = gene['Name'][0] # same as gene.attributes['Name'][0]
+		except:
+			genename = "" # An empty string
+		# --
+		
 		seq_record = records_dict[gene.chrom] # The chromosome sequence
 
 		if args.specificgene and ((geneID not in focalgenes) and (genename not in focalgenes)):
