@@ -79,7 +79,7 @@ class Window:
 		self.finallen = self.size # The final size can change
 
 		if isinstance(coord, list): # If it's a list, order so the order doesn't matter
-			lstart = min(coord)
+			lstart = min(coord) # The lists are useful to evaluate the insertion of an element, rather than just a point in the genome
 			lend = max(coord)			
 		else: 						# If it's just a number (a single point)
 			lstart = coord
@@ -264,16 +264,17 @@ probs = [prob/sum(assemblylens.values()) for prob in assemblylens.values()]     
 randvalues = open(args.output + f'randvalues_{args.bootstraps}.txt', "w") # Use the current string for the name
 randvalues.write(f"Replicate\tCoverage\n") # header
 
-randmean_list = []
+# randmean_list = []
 
 for r in range(args.bootstraps):
-	# if r%10 == 0:
-	# 	sys.stdout.write(f"...{r}\n")
-	rnlist = []
+	# Some reporting to keep tracking 
+	if (r+1)%10 == 0: # +1 because r is in base 0
+		sys.stdout.write(f"... random point {r + 1} at window size of {args.winsize}\n")
+	
+	rnlist = [] # This list will contain the raw coverage points
 
-	countoriginallist = 0
-	while countoriginallist <= len(obslist)
-	# for i in range(len(obslist)):
+	countoriginallist = 0 
+	while (countoriginallist < len(obslist)): # The while is there to make sure that we always have the same number of random points as the observed data
 		rnchr_index = np.random.choice(len(assemblylens.keys()), 1, p=probs, replace=False)[0]	# Choose a chromosome
 		rnchr = list(assemblylens.keys())[rnchr_index]											# Get the actual name of that chromosome (contig)
 
@@ -293,7 +294,7 @@ for r in range(args.bootstraps):
 
 		win.percentage = win.coverage/win.finallen
 
-		if win.finallen/args.winsize > args.minwin:
+		if win.finallen/args.winsize > args.minwin: # This window is accepted
 			rnlist.append(win.percentage)
 			countoriginallist += 1
 
@@ -301,7 +302,7 @@ for r in range(args.bootstraps):
 	
 	# Print the bootstrap into a file
 	randvalues.write(f'{r + 1}\t{randmean}\n')
-	randmean_list.append(randmean)
+	# randmean_list.append(randmean)
 
 randvalues.close()
 
