@@ -249,7 +249,7 @@ for ctg in focaldic.keys(): # In each chromosome
 obsmean = sum(obslist)/len(obslist)
 obsvalues.close()
 
-sys.stdout.write(f"	... Observed value: {obsmean}\n")
+sys.stdout.write(f"	... Observed value: {obsmean} at window size of {args.winsize}\n")
 
 
 # ============================
@@ -270,7 +270,10 @@ for r in range(args.bootstraps):
 	# if r%10 == 0:
 	# 	sys.stdout.write(f"...{r}\n")
 	rnlist = []
-	for i in range(len(obslist)):
+
+	countoriginallist = 0
+	while countoriginallist <= len(obslist)
+	# for i in range(len(obslist)):
 		rnchr_index = np.random.choice(len(assemblylens.keys()), 1, p=probs, replace=False)[0]	# Choose a chromosome
 		rnchr = list(assemblylens.keys())[rnchr_index]											# Get the actual name of that chromosome (contig)
 
@@ -292,6 +295,7 @@ for r in range(args.bootstraps):
 
 		if win.finallen/args.winsize > args.minwin:
 			rnlist.append(win.percentage)
+			countoriginallist += 1
 
 	randmean = sum(rnlist)/len(rnlist)
 	
