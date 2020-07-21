@@ -19,16 +19,17 @@ library(ggplot2, quietly = TRUE)
 # ---------
 
 # P. anserina
-observed_an <- read.table("/Users/lore/Dropbox/PhD_UU/Analyses/JohannessonsServer/3_SpokBlockPaper/4_BootstrapTEs/distributions/PaWa137m-TEs-1000bp_obsvalues.txt", header = TRUE)
-randvalues_an <- read.table("/Users/lore/Dropbox/PhD_UU/Analyses/JohannessonsServer/3_SpokBlockPaper/4_BootstrapTEs/distributions/PaWa137m-TEs-1000bp_randvalues_10000.txt", header = TRUE)
+observed_an <- read.table("/Users/Lorena/Dropbox/PhD_UU/Analyses/JohannessonsServer/3_SpokBlockPaper/4_BootstrapTEs/distributions/PaWa137m-TEs-1000bp_obsvalues.txt", header = TRUE)
+observed_an <- read.table("/Users/Lorena/Dropbox/PhD_UU/Analyses/JohannessonsServer/3_SpokBlockPaper/4_BootstrapTEs/distributions/PaWa137m-TEs-1000bp_obsvalues.txt", header = TRUE)
+randvalues_an <- read.table("/Users/Lorena/Dropbox/PhD_UU/Analyses/JohannessonsServer/3_SpokBlockPaper/4_BootstrapTEs/distributions/PaWa137m-TEs-1000bp_randvalues_10000.txt", header = TRUE)
 
 # P. pauciseta
-observed_pa <- read.table("/Users/lore/Dropbox/PhD_UU/Analyses/JohannessonsServer/3_SpokBlockPaper/4_BootstrapTEs/distributions/CBS237.71m-TEs-1000bp_obsvalues.txt", header = TRUE)
-randvalues_pa <- read.table("/Users/lore/Dropbox/PhD_UU/Analyses/JohannessonsServer/3_SpokBlockPaper/4_BootstrapTEs/distributions/CBS237.71m-TEs-1000bp_randvalues_10000.txt", header = TRUE)
+observed_pa <- read.table("/Users/Lorena/Dropbox/PhD_UU/Analyses/JohannessonsServer/3_SpokBlockPaper/4_BootstrapTEs/distributions/CBS237.71m-TEs-1000bp_obsvalues.txt", header = TRUE)
+randvalues_pa <- read.table("/Users/Lorena/Dropbox/PhD_UU/Analyses/JohannessonsServer/3_SpokBlockPaper/4_BootstrapTEs/distributions/CBS237.71m-TEs-1000bp_randvalues_10000.txt", header = TRUE)
 
 # P. comata
-observed_co <- read.table("/Users/lore/Dropbox/PhD_UU/Analyses/JohannessonsServer/3_SpokBlockPaper/4_BootstrapTEs/distributions/PcWa139m-TEs-1000bp_obsvalues.txt", header = TRUE)
-randvalues_co <- read.table("/Users/lore/Dropbox/PhD_UU/Analyses/JohannessonsServer/3_SpokBlockPaper/4_BootstrapTEs/distributions/PcWa139m-TEs-1000bp_randvalues_10000.txt", header = TRUE)
+observed_co <- read.table("/Users/Lorena/Dropbox/PhD_UU/Analyses/JohannessonsServer/3_SpokBlockPaper/4_BootstrapTEs/distributions/PcWa139m-TEs-1000bp_obsvalues.txt", header = TRUE)
+randvalues_co <- read.table("/Users/Lorena/Dropbox/PhD_UU/Analyses/JohannessonsServer/3_SpokBlockPaper/4_BootstrapTEs/distributions/PcWa139m-TEs-1000bp_randvalues_10000.txt", header = TRUE)
 # ---------
 
 # What is the mean of the observed values in each species?
