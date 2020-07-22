@@ -47,6 +47,7 @@ parser.add_argument('GenomeGFF', help="GFF3 file with features of the genome (i.
 parser.add_argument("--winsize", '-w', help = "Total size of the window (focal point goes in the middle); default 1000 bp", default = 1000, type = int)
 parser.add_argument("--minwin", '-m', help = "Minimum fraction of size of edge window to retain it; default 0.75", default = 0.75, type = float)
 parser.add_argument("--bootstraps", '-b', help = "Make a distribution of a given number of BOOTSTRAPS; default 100", default = 100, type = int)
+parser.add_argument("--noobs", '-N', help = "Print only the bootstraps, not the observed values", default = False, action = 'store_true')
 parser.add_argument("--exclude", "-e", help="Exclude contig(s) in format ctg1,ctg2,ctg3", type=str, default = '')
 
 # extras
@@ -220,11 +221,14 @@ for line in fGFFopen:
 		else: # contig is new
 			focaldic[contig] = [[start, end, sense]]
 
+
 # ============================
-sys.stdout.write("Writing a file with the observed values...\n")
+## The observed values
 # ============================
-obsvalues = open(args.output + 'obsvalues.txt', "w") # Use the current string for the name
-obsvalues.write(f"Contig\tStart\tEnd\tDensity\tCoverage\n") # header
+if not args.noobs: 
+	sys.stdout.write("Writing a file with the observed values...\n")
+	obsvalues = open(args.output + 'obsvalues.txt', "w") # Use the current string for the name
+	obsvalues.write(f"Contig\tStart\tEnd\tDensity\tCoverage\n") # header
 
 obslist = []
 
@@ -243,68 +247,69 @@ for ctg in focaldic.keys(): # In each chromosome
 			obslist.append(win.percentage)
 
 		# Print result in a table
-		obsvalues.write(f"{ctg}\t{win.start}\t{win.end}\t{win.coverage}\t{win.coverage/win.finallen}\n")
+		if not args.noobs: obsvalues.write(f"{ctg}\t{win.start}\t{win.end}\t{win.coverage}\t{win.coverage/win.finallen}\n")
 
-## THE observed value!
-obsmean = sum(obslist)/len(obslist)
-obsvalues.close()
+	## THE observed value!
+	obsmean = sum(obslist)/len(obslist)
 
-sys.stdout.write(f"	... Observed value: {obsmean} at window size of {args.winsize}\n")
-
+sys.stdout.write(f"	... Observed value: {obsmean} (n = {len(obslist)}) at window size of {args.winsize}\n")
 
 # ============================
-sys.stdout.write(f"Calculating a bootstrap distribution ({args.bootstraps} bootstraps)...\n")
+## The Bootstraps
 # ============================
 
-## Choose the chromosome with probability proportional to their sizes
-# This assumes that the values are sorted!
-probs = [prob/sum(assemblylens.values()) for prob in assemblylens.values()]         	# Probabilities proportional to the chromosome sizes
+if args.bootstraps > 0:
+	sys.stdout.write(f"Calculating a bootstrap distribution ({args.bootstraps} bootstraps)...\n")
 
-## Open file for report
-randvalues = open(args.output + f'randvalues_{args.bootstraps}.txt', "w") # Use the current string for the name
-randvalues.write(f"Replicate\tCoverage\n") # header
+	## Choose the chromosome with probability proportional to their sizes
+	# This assumes that the values are sorted!
+	probs = [prob/sum(assemblylens.values()) for prob in assemblylens.values()]         	# Probabilities proportional to the chromosome sizes
 
-# randmean_list = []
+	## Open file for report
+	randvalues = open(args.output + f'randvalues_{args.bootstraps}.txt', "w") # Use the current string for the name
+	randvalues.write(f"Replicate\tCoverage\n") # header
 
-for r in range(args.bootstraps):
-	# Some reporting to keep tracking 
-	if (r+1)%10 == 0: # +1 because r is in base 0
-		sys.stdout.write(f"... random point {r + 1} at window size of {args.winsize}\n")
-	
-	rnlist = [] # This list will contain the raw coverage points
+	# randmean_list = []
 
-	countoriginallist = 0 
-	while (countoriginallist < len(obslist)): # The while is there to make sure that we always have the same number of random points as the observed data
-		rnchr_index = np.random.choice(len(assemblylens.keys()), 1, p=probs, replace=False)[0]	# Choose a chromosome
-		rnchr = list(assemblylens.keys())[rnchr_index]											# Get the actual name of that chromosome (contig)
+	for r in range(args.bootstraps):
+		# Some reporting to keep tracking 
+		if (r+1)%10 == 0: # +1 because r is in base 0
+			sys.stdout.write(f"... random point {r + 1} at window size of {args.winsize}\n")
+		
+		rnlist = [] # This list will contain the raw coverage points
 
-		# Choose the location of the point at random
-		rnpoint = np.random.choice(assemblylens[rnchr], 1, replace=False)[0] 
+		countoriginallist = 0 
+		while (countoriginallist < len(obslist)): # The while is there to make sure that we always have the same number of random points as the observed data
+			rnchr_index = np.random.choice(len(assemblylens.keys()), 1, p=probs, replace=False)[0]	# Choose a chromosome
+			rnchr = list(assemblylens.keys())[rnchr_index]											# Get the actual name of that chromosome (contig)
 
-		# Make the window
-		lenctg = assemblylens[rnchr] # How large is this contig?
-		win = Window([rnpoint,rnpoint], args.winsize, lenctg)
+			# Choose the location of the point at random
+			rnpoint = np.random.choice(assemblylens[rnchr], 1, replace=False)[0] 
 
-		## How much of that interval is annotated in the gff?
-		# Does that contig have any annotation, to begging with?
-		if rnchr not in assemblylens.keys(): # no
-			win.coverage = 0								# CAREFUL! This assumes absence rather than missing data
-		else: # yes
-			win.coverage = get_coverage(gffdic, rnchr, win) # Calculate the coverage
+			# Make the window
+			lenctg = assemblylens[rnchr] # How large is this contig?
+			win = Window([rnpoint,rnpoint], args.winsize, lenctg)
 
-		win.percentage = win.coverage/win.finallen
+			## How much of that interval is annotated in the gff?
+			# Does that contig have any annotation, to begging with?
+			if rnchr not in assemblylens.keys(): # no
+				win.coverage = 0								# CAREFUL! This assumes absence rather than missing data
+			else: # yes
+				win.coverage = get_coverage(gffdic, rnchr, win) # Calculate the coverage
 
-		if win.finallen/args.winsize > args.minwin: # This window is accepted
-			rnlist.append(win.percentage)
-			countoriginallist += 1
+			win.percentage = win.coverage/win.finallen
 
-	randmean = sum(rnlist)/len(rnlist)
-	
-	# Print the bootstrap into a file
-	randvalues.write(f'{r + 1}\t{randmean}\n')
-	# randmean_list.append(randmean)
+			if win.finallen/args.winsize > args.minwin: # This window is accepted
+				rnlist.append(win.percentage)
+				countoriginallist += 1
 
-randvalues.close()
+		randmean = sum(rnlist)/len(rnlist)
+		
+		# Print the bootstrap into a file
+		randvalues.write(f'{r + 1}\t{randmean}\n')
+		# randmean_list.append(randmean)
+
+	randvalues.close()
 
 # ## Rudimentary plot
 # from matplotlib import pyplot as plt
@@ -313,6 +318,8 @@ randvalues.close()
 # plt.hist(randmean_list, bins=50)
 # plt.gca().set(title='Frequency Histogram', ylabel='Frequency')
 # plt.show()
+
+if args.noobs and (args.bootstraps < 1): print("Nothing done because -N and 0 bootstraps :P")
 
 sys.stdout.write("Done!\n")
 sys.stdout.write("--- {0:.2f} seconds ---\n".format(time.time() - start_time))
