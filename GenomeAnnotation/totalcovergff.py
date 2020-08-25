@@ -18,13 +18,13 @@ import sys  # To exit the script, and to pipe out
 import os  # For the input name
 # ------------------------------------------------------
 
-version = 2.0
+version = 2.01
 versiondisplay = "{0:.2f}".format(version)
 
 # ============================
 # Make a nice menu for the user
 # ============================
-parser = argparse.ArgumentParser(description="* Extract GFF3 features to fasta file *", epilog="The GFF3 has to be sorted beforehand!!!!\nThe name in the first column of the GFF3 has to be the same as the sequence in the fasta file.")  # Create the object using class argparse
+parser = argparse.ArgumentParser(description="* Produce a BED file from an input GFF with overlapping features merged *", epilog="The GFF3 has to be sorted beforehand!!!!\nThe name in the first column of the GFF3 has to be the same as the sequence in the fasta file.")  # Create the object using class argparse
 
 # Add options
 parser.add_argument('GFF', help="GFF3 file")
