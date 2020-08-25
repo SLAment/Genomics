@@ -53,7 +53,7 @@ parser.add_argument("--exclude", "-e", help="Exclude contig(s) in format ctg1,ct
 # extras
 parser.add_argument('--output', '-o', help="Prefix to append to the output files; eg. 'mysample_'", default = '')
 parser.add_argument('--version', '-v', action='version', version='%(prog)s ' + versiondisplay)
-# parser.add_argument('--verbose', '-b', help="Print a little bit of extra information", default=False, action='store_true')
+parser.add_argument('--verbose', '-V', help="Print a little bit of extra information", default=False, action='store_true')
 
 
 try:
@@ -173,7 +173,7 @@ assemblylens = {seq_record.id:len(seq_record) for seq_record in SeqIO.parse(fast
 # assemblylens = {seq_record.id:len(seq_record) for seq_record in SeqIO.parse(fastaopen, "fasta")}
 	
 # ============================
-sys.stdout.write("Reading gff with the assembly features ...\n") 
+if args.verbose: sys.stdout.write("Reading gff with the assembly features ...\n") 
 # ============================
 # Save the ranges in a dictionary
 gffdic = {} # key: chromosome, value: ([start, end])
@@ -200,7 +200,7 @@ for ctg in gffdic.keys():
 # -----------------------------
 
 # ============================
-sys.stdout.write("Reading gff with the focal features...\n")
+if args.verbose: sys.stdout.write("Reading gff with the focal features...\n")
 # ============================
 # Save the ranges in a dictionary
 focaldic = {} # key: chromosome, value: ([start, end])
@@ -226,9 +226,9 @@ for line in fGFFopen:
 ## The observed values
 # ============================
 if not args.noobs: 
-	sys.stdout.write("Writing a file with the observed values...\n")
+	if args.verbose: sys.stdout.write("Writing a file with the observed values...\n")
 	obsvalues = open(args.output + 'obsvalues.txt', "w") # Use the current string for the name
-	obsvalues.write(f"Contig\tStart\tEnd\tDensity\tCoverage\n") # header
+	obsvalues.write(f"Contig\tWindow\tStart\tEnd\tDensity\tCoverage\n") # header
 
 obslist = []
 
@@ -247,7 +247,7 @@ for ctg in focaldic.keys(): # In each chromosome
 			obslist.append(win.percentage)
 
 		# Print result in a table
-		if not args.noobs: obsvalues.write(f"{ctg}\t{win.start}\t{win.end}\t{win.coverage}\t{win.coverage/win.finallen}\n")
+		if not args.noobs: obsvalues.write(f"{ctg}\t{win.finallen}\t{win.start}\t{win.end}\t{win.coverage}\t{win.coverage/win.finallen}\n")
 
 	## THE observed value!
 	obsmean = sum(obslist)/len(obslist)
