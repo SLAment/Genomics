@@ -23,7 +23,7 @@ import subprocess # For the database
 from shutil import rmtree # For removing directories
 import argparse # For the fancy options
 # ------------------------------------------------------
-version = 1.2
+version = 1.21
 versiondisplay = "{0:.2f}".format(version)
 
 # Make a nice menu for the user
@@ -154,12 +154,10 @@ else:
 # -----------------------------------
 
 if args.haplo: # We are looking for entire haplotypes and the blast is only the edges
-	tabs3 = tabs
-
 	chunks = {}
 	for hit5 in tabs:
-		for hit3 in tabs3:
-			# Is it the same contig
+		for hit3 in tabs:
+			# Is it the same contig?
 			if hit5[1] == hit3[1]:
 				hit5start = int(hit5[8])
 				hit5end = int(hit5[9])
