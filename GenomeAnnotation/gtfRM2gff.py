@@ -96,14 +96,17 @@ for line in GFFopen: # Without saving in memory
 	else:
 		cols = line.rstrip("\n").split("\t")		# break the line into columns defined by the tab
 
-		# Reformat
-		newcols = cols
-		newcols[2] = "repeat" # Instead of "similarity"
-		newcols[8] = attributesmaker(cols[8])
-		newline = '\t'.join(newcols) + "\n"
+		if cols[1] != "RepeatMasker": # This not a RepeatMasker line, so leave it as is
+			sys.stdout.write(line)
+		else:
+			# Reformat
+			newcols = cols
+			newcols[2] = "repeat" # Instead of "similarity"
+			newcols[8] = attributesmaker(cols[8])
+			newline = '\t'.join(newcols) + "\n"
 
-		# Print
-		sys.stdout.write(newline)
+			# Print
+			sys.stdout.write(newline)
 
 
 		# # Print, but also catch the error if I'm piping (see https://stackoverflow.com/questions/26692284/how-to-prevent-brokenpipeerror-when-doing-a-flush-in-python)
