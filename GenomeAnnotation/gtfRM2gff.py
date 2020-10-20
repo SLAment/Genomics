@@ -26,8 +26,8 @@ parser = argparse.ArgumentParser(description="* Extract GFF3 features to fasta f
 
 # Add options
 parser.add_argument('GTF', help="GTF file from RepeatMasker (-gff option in RepeatMasker)")
-parser.add_argument("--color", "-c", help="Color in Hex code assigned to the repeats for visualization in IGV (default #cacbd3)", default='#cacbd3')
-parser.add_argument("--scolor", "-s", help="Color in Hex code assigned to the simple repeats for visualization in IGV (default #4b5f81)", default='#4b5f81')
+parser.add_argument("--color", "-c", help="Color in Hex code assigned to the repeats for visualization in IGV (default #4b5f81)", default='#4b5f81')
+parser.add_argument("--scolor", "-s", help="Color in Hex code assigned to the simple repeats for visualization in IGV (default #cacbd3)", default='#cacbd3')
 
 # # extras
 parser.add_argument('--version', '-v', action='version', version='%(prog)s ' + versiondisplay)
