@@ -33,7 +33,7 @@ versiondisplay = "{0:.2f}".format(version)
 # ============================
 # Make a nice menu for the user
 # ============================
-parser = argparse.ArgumentParser(description="* Slice a GFF3 file *", epilog="The GFF3 has to be sorted beforehand!!!!\nThis version can only deal with ONE scaffold per GFF file.", formatter_class=RawTextHelpFormatter)  # Create the object using class argparse
+parser = argparse.ArgumentParser(description="* Slice a GFF3 file *", epilog="The GFF3 has to be sorted beforehand!!!!\nThis version can only deal with ONE scaffold at a time.", formatter_class=RawTextHelpFormatter)  # Create the object using class argparse
 
 # Add options
 parser.add_argument('GFF', help="GFF3 file sorted beforehand")
