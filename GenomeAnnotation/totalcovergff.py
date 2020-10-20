@@ -6,6 +6,11 @@
 # from RepeatMasker). Basically it produces a bed file from the gff file with
 # overlapping features merged.
 
+## version 2.1 - "from Bio.Alphabet import generic_dna" was removed from
+# BioPython >1.76. See https://biopython.org/wiki/Alphabet . I also changed a
+# line to be more precise looking for lines that are comments and not
+# something in the attributes with the "#" symbol
+
 # ==================================================
 # Sandra Lorena Ament Velasquez
 # Johannesson Lab, Evolutionary Biology Center, Uppsala University, Sweden
@@ -18,7 +23,7 @@ import sys  # To exit the script, and to pipe out
 import os  # For the input name
 # ------------------------------------------------------
 
-version = 2.01
+version = 2.1
 versiondisplay = "{0:.2f}".format(version)
 
 # ============================
@@ -84,7 +89,8 @@ def remove_overlap(ranges):
 gffdic = {} # key: chromosome, value: ([start, end])
 
 for line in gffopen:
-	if '#' in line:
+
+	if line.startswith( '#' ):
 		pass
 	elif line not in ['\n', '\r\n']: # Ignore empty lines
 		cols = line.rstrip("\n").split("\t")
@@ -107,12 +113,11 @@ for ctg in gffdic.keys():
 # ============================
 if args.fasta:
 	from Bio import SeqIO # For the fasta
-	from Bio.Alphabet import generic_dna
 
 	# Read fasta
 	fastaopen = open(args.fasta, 'r')
 	# This stores in memory
-	records_dict = SeqIO.to_dict(SeqIO.parse(fastaopen, "fasta", generic_dna))
+	records_dict = SeqIO.to_dict(SeqIO.parse(fastaopen, "fasta"))
 
 	# Exclude contigs if necessary
 	if args.excludestr:
