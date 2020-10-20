@@ -27,7 +27,6 @@
 import argparse  # For the fancy options
 from Bio import SeqIO
 from Bio.Seq import Seq
-# from Bio.Alphabet import generic_dna
 import sys  # To exit the script
 import os  # For the input name
 import re
@@ -41,7 +40,7 @@ supportedtypes = ["gene", "CDS", "cds", "exon", "noutrs", "similarity", "express
 # ============================
 # Make a nice menu for the user
 # ============================
-parser = argparse.ArgumentParser(description="* Extract GFF3 features to fasta file *", epilog="The GFF3 has to be sorted beforehand!!!!\nThe name in the first column of the GFF3 has to be the same as the sequence in the fasta file.")  # Create the object using class argparse
+parser = argparse.ArgumentParser(description="* Extract GFF3 features to fasta file *", epilog="The name in the first column of the GFF3 has to be the same as the sequence in the fasta file.")  # Create the object using class argparse
 
 # Add options
 parser.add_argument('fastafile', help="Fasta file with the genomic secuences")
