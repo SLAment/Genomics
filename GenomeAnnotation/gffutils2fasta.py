@@ -7,11 +7,7 @@
 # ================== gffutils2fasta =================
 # Script to extract fasta subsequences out of an input fasta file using a
 # corresponding GFF3 file.
-# The script assumes there are no repeated sequences in the fasta file. Also
-# that the gene is the higher level in the attributes. 
-
-# This is meant as a starting script to eventually replace Lore_gff2fasta.py
-# due to it's inability to deal with overlapping genes.
+# The script assumes that the gene is the higher level in the attributes. 
 
 # Sources
 # https://pythonhosted.org/gffutils/autodocs/gffutils.create_db.html
@@ -38,9 +34,9 @@ import re
 import gffutils
 # ------------------------------------------------------
 
-version = 1.5
+version = 1.51
 versiondisplay = "{0:.2f}".format(version)
-supportedtypes = ["gene", "CDS", "exon", "noutrs", "similarity", "expressed_sequence_match"] # Unlike the CDS, Exons may contain the UTRs; noutrs is from start to stop codon without introns in nuleotides
+supportedtypes = ["gene", "CDS", "cds", "exon", "noutrs", "similarity", "expressed_sequence_match"] # Unlike the CDS, Exons may contain the UTRs; noutrs is from start to stop codon without introns in nuleotides
 
 # ============================
 # Make a nice menu for the user
@@ -79,6 +75,12 @@ except IOError as msg:  # Check that the file exists
 	parser.print_help()
 
 # ------------------------------------------------------
+
+# I often write it in small case, so to catch that
+
+if args.type == "cds":
+	args.type = "CDS"
+
 
 # ---------------------------------
 # Make database
