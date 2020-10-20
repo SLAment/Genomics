@@ -10,13 +10,13 @@
 # 2019/05/02
 # +++++++++++++++++++++++++++++++++++++++++++++++++
 
+# version 1.1 - "from Bio.Alphabet import generic_dna" was removed from BioPython >1.76. See https://biopython.org/wiki/Alphabet
 # ------------------------------------------------------
 import sys
 import argparse # For the fancy options
 from Bio import SeqIO
-from Bio.Alphabet import generic_dna
 # ------------------------------------------------------
-version = 1
+version = 1.1
 versiondisplay = "{0:.2f}".format(version)
 
 # Make a nice menu for the user
@@ -94,7 +94,7 @@ for ortho in orthogroups:
 	for sample in orthogroups[ortho]:
 		# Read the fasta of that sample
 		fastaopen = open(samplefiles[sample], 'r')
-		records_dict = SeqIO.to_dict(SeqIO.parse(fastaopen, "fasta", generic_dna))
+		records_dict = SeqIO.to_dict(SeqIO.parse(fastaopen, "fasta"))
 
 		# Get the sequence of the right gene
 		seq = orthogroups[ortho][sample][0] # Assume there is only one ortholog per species

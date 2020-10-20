@@ -19,6 +19,8 @@
 # https://github.com/daler/gffutils/blob/master/gffutils/test/test.py
 # https://github.com/daler/gffutils/issues/61
 # https://pythonhosted.org/gffutils/database-schema.html
+
+# version 1.5 - "from Bio.Alphabet import generic_dna" was removed from BioPython >1.76. See https://biopython.org/wiki/Alphabet
 # ==================================================
 # Sandra Lorena Ament Velasquez
 # Johannesson Lab, Evolutionary Biology Center, Uppsala University, Sweden
@@ -29,14 +31,14 @@
 import argparse  # For the fancy options
 from Bio import SeqIO
 from Bio.Seq import Seq
-from Bio.Alphabet import generic_dna
+# from Bio.Alphabet import generic_dna
 import sys  # To exit the script
 import os  # For the input name
 import re
 import gffutils
 # ------------------------------------------------------
 
-version = 1.4
+version = 1.5
 versiondisplay = "{0:.2f}".format(version)
 supportedtypes = ["gene", "CDS", "exon", "noutrs", "similarity", "expressed_sequence_match"] # Unlike the CDS, Exons may contain the UTRs; noutrs is from start to stop codon without introns in nuleotides
 
@@ -114,7 +116,7 @@ db = gffutils.create_db(data = args.GFF,
 ### Read the fasta file
 # ---------------------------
 # This stores in memory
-records_dict = SeqIO.to_dict(SeqIO.parse(fastaopen, "fasta", generic_dna))
+records_dict = SeqIO.to_dict(SeqIO.parse(fastaopen, "fasta"))
 
 # ---------------------------
 # Names for input and output

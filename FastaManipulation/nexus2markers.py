@@ -3,6 +3,8 @@
 
 # ================== nexus2markers =================
 # Script to extract all partitions in a simple nexus file as individual fasta files
+
+# version 1.1 - "from Bio.Alphabet import IUPAC, Gapped" was removed from BioPython >1.76. See https://biopython.org/wiki/Alphabet
 # ==================================================
 # Sandra Lorena Ament Velasquez
 # Johannesson Lab, Evolutionary Biology Center, Uppsala University, Sweden
@@ -14,11 +16,11 @@
 # https://gist.github.com/brantfaircloth/2999578
 # https://biopython.org/wiki/Concatenate_nexus
 
-version = 1
+version = 1.1
 
 from Bio.Nexus import Nexus
 import sys
-from Bio.Alphabet import IUPAC, Gapped
+# from Bio.Alphabet import IUPAC, Gapped
 from Bio.Align import MultipleSeqAlignment
 from Bio import SeqIO
 
@@ -45,7 +47,7 @@ for marker in markers:
 	partitioncols = master.charsets[marker]
 
 	# Start an empty msa object
-	newalign = MultipleSeqAlignment([], Gapped(IUPAC.unambiguous_dna, "-"))
+	newalign = MultipleSeqAlignment([])
 
 	# For each taxon, get those columns:
 	for taxon in master.taxlabels:

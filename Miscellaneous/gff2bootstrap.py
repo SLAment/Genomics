@@ -24,7 +24,6 @@
 # ------------------------------------------------------
 import argparse  # For the fancy options
 from Bio import SeqIO
-from Bio.Alphabet import generic_dna
 import numpy as np # For random numbers
 import time
 import sys
@@ -160,7 +159,7 @@ def get_coverage(gffdic, ctg, win):
 ### Read the fasta file
 # ---------------------------
 # # This stores in memory
-# records_dict = SeqIO.to_dict(SeqIO.parse(fastaopen, "fasta", generic_dna))
+# records_dict = SeqIO.to_dict(SeqIO.parse(fastaopen, "fasta"))
 
 # Exclude contigs if necessary
 if args.exclude:

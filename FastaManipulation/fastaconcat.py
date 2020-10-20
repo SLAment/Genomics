@@ -3,17 +3,18 @@
 
 # ================== fastaconcat =================
 # Script to concatenate any number of fasta files, based on position at least for now.
+
+# version 2.1 - "from Bio.Alphabet import generic_dna" was removed from BioPython >1.76. See https://biopython.org/wiki/Alphabet
 # ==================================================
 # Sandra Lorena Ament Velasquez
 # Johannesson Lab, Evolutionary Biology Center, Uppsala University, Sweden
 # 2019/04/09
 # +++++++++++++++++++++++++++++++++++++++++++++++++
-version = 2.0
+version = 2.1
 
 import argparse # For the fancy options
 from Bio.Seq import Seq
 from Bio import SeqIO
-from Bio.Alphabet import generic_dna
 import sys
 from sys import argv
 
@@ -89,13 +90,9 @@ else:
 
 	concatseqs = []
 	for i in range(0, numseqs): # for each line of the final fasta
-		concatenated = Seq("", generic_dna) # make empty sequence
+		concatenated = Seq("") # make empty sequence
 		for fasta in allfastas: # For each alignment (list of sequences)
 			concatenated += fasta[i] # Concatenate the element corresponding to that line of the final fasta
 		# Print concatenated sequence
 		print(">" + names[i])
 		print(concatenated.seq)
-
-
-
-

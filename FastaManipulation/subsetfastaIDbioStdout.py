@@ -9,6 +9,7 @@
 
 # But check subsetfasta.py from Lineus work.
 
+# version 1.1 - "from Bio.Alphabet import generic_dna" was removed from BioPython >1.76. See https://biopython.org/wiki/Alphabet
 # ==================================================
 # Sandra Lorena Ament Velasquez
 # Johannesson Lab, Evolutionary Biology Center, Uppsala University, Sweden
@@ -19,11 +20,11 @@
 # ------------------------------------------------------
 # import argparse # For the fancy options
 from Bio import SeqIO
-from Bio.Alphabet import generic_dna
+# from Bio.Alphabet import generic_dna
 import sys # To exit the script 
 import os # For the input name
 # ------------------------------------------------------
-version = 1
+version = 1.1
 versiondisplay = "{0:.2f}".format(version)
 
 # ---------------------------------
@@ -47,7 +48,7 @@ if strings == []:
 # Names of sequences in file
 # ---------------------------------
 # This stores in memory
-records_dict = SeqIO.to_dict(SeqIO.parse(fastaopen, "fasta", generic_dna))
+records_dict = SeqIO.to_dict(SeqIO.parse(fastaopen, "fasta"))
 
 for string in strings:
 	# Get all sequences that match that string
