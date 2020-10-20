@@ -2,7 +2,7 @@
 # encoding: utf-8
 
 # ================== fastaconcat =================
-# Script to concatenate any number of fasta files, based on position at least for now.
+# Script to concatenate any number of fasta files, either by name or by rank.
 
 # version 2.1 - "from Bio.Alphabet import generic_dna" was removed from BioPython >1.76. See https://biopython.org/wiki/Alphabet
 # ==================================================
