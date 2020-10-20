@@ -22,7 +22,9 @@ The scripts are made to either parse the BLAST output, filter it or modify it, o
 
 ## Fasta Manipulation
 
-TODO
+- `fastaconcat.py` - Script to concatenate any number of fasta files, either by name (`--name`) or by rank (default).
+- `nexus2markers.py` - Script to extract all partitions in a simple nexus file as individual fasta files.
+- `subsetfastaIDbioStdout.py` - Script to produce a subset of an input fasta file using one or several strings that identify specific sequences. The output goes to standard output. It depends on biopython.
 
 ## Genome Annotation
 
@@ -38,7 +40,7 @@ TODO
 	* similarity - modified version of the RepeatMasker gtf as produced by for example `gtfRM2gff.py`
 	* expressed_sequence_match - this is found in the output of MAKER as alignment of other proteins
 
-- `gtfRM2gff.py` - Script to transform the gtf of RepeatMasker (obtained with missleading option `-gff`) into a normal gff3. It also appends a color feature to normal repeats (`-c`) and to simple repeats (`-s`) to be displayed in [The Integrative Genomics Viewer (IGV)](http://software.broadinstitute.org/software/igv/).
+- `gtfRM2gff.py` - Script to transform the gtf of RepeatMasker (obtained with missleading option `-gff`) into a normal gff3. It also appends a color attribute to normal repeats (`-c`) and to simple repeats (`-s`) to be displayed in [The Integrative Genomics Viewer (IGV)](http://software.broadinstitute.org/software/igv/).
 - `totalcovergff.py` - Script to obtained the merged coordinates of all models in gff file (eg. from RepeatMasker either the gtf or gff produced with `gtfRM2gff.py`). Basically it produces a bed file from the gff file with overlapping features merged. If only the gff is given, then it will collapse all the repeats into non-overlapping interavals. If an associated fasta file is also provided (`--fasta`), then it will calculate the total coverage of the contigs within that fasta annotated in the gff.
 
 ## Miscellaneous
