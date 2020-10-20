@@ -6,6 +6,8 @@
 # Based on the script BLAST_extractor.py and GFFgenesIDFix.py
 
 # https://biopython.org/DIST/docs/api/Bio.Blast.Applications-pysrc.html
+
+# version 1.5 - "from Bio.Alphabet import generic_dna" was removed from BioPython >1.76. See https://biopython.org/wiki/Alphabet
 # ==================================================
 # Sandra Lorena Ament Velasquez
 # Johannesson Lab, Evolutionary Biology Center, Uppsala University, Sweden
@@ -17,13 +19,13 @@
 import os # For the input name
 import sys
 from Bio import SeqIO
-from Bio.Alphabet import generic_dna
+# from Bio.Alphabet import generic_dna
 from Bio.Blast.Applications import * # NCBI BLASTX wrapper from the Bio.Blast.Applications module
 import subprocess # For the database
 from shutil import rmtree # For removing directories
 import argparse # For the fancy options
 # ------------------------------------------------------
-version = 1.4
+version = 1.5
 versiondisplay = "{0:.2f}".format(version)
 
 # Make a nice menu for the user
@@ -82,10 +84,10 @@ def makeBLASTdb(fasta, databasename, dbtype):
 # -----------------------------------
 
 # Save genome in memory
-genome_dict = SeqIO.to_dict(SeqIO.parse(genomeopen, "fasta", generic_dna))
+genome_dict = SeqIO.to_dict(SeqIO.parse(genomeopen, "fasta"))
 
 # Query
-query_dict = SeqIO.to_dict(SeqIO.parse(queryopen, "fasta", generic_dna))
+query_dict = SeqIO.to_dict(SeqIO.parse(queryopen, "fasta"))
 if args.seqid:
 	# Get all sequences that match that string
 	matching = [seq for seq in query_dict.keys() if args.seqid == seq]

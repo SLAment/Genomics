@@ -8,7 +8,7 @@
 # genome. If the --haplo option is used, then it searches for a haplotype
 # instead.
 
-# version 1.3 - "from Bio.Alphabet import generic_dna" was removed from BioPython. See https://biopython.org/wiki/Alphabet
+# version 1.3 - "from Bio.Alphabet import generic_dna" was removed from BioPython >1.76. See https://biopython.org/wiki/Alphabet
 # ==================================================
 # Sandra Lorena Ament Velasquez
 # Johannesson Lab, Evolutionary Biology Center, Uppsala University, Sweden
