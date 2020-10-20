@@ -1,7 +1,7 @@
 # Genomics
 A collection of scripts related to Genomics, mostly associated with my work on the genomics of *Podospora anserina*.
 
-I often use [conda](https://docs.conda.io/projects/conda/en/latest/) to install the dependencies of these scripts. For example, after instalation of conda, I make an environment like this:
+I often use [conda](https://docs.conda.io/projects/conda/en/latest/) to install the dependencies of these scripts. For example, after installation of conda, I make an environment like this:
 
     $ conda create -n bioinformatics blast=2.9.0 biopython=1.78 gffutils=0.10.1 -c bioconda
 
@@ -29,7 +29,7 @@ The scripts are made to either parse the BLAST output, filter it or modify it, o
 ## Genome Annotation
 
 - `GFFnumerator.py` - Script to re-name the IDs of the genes and features of a GFF3 file. It prints to the standard output. It depends on the library `gffutils`.
-- `GFFSlicer.py` -  Script to extract sections of a GFF file while correcting their coordinates, making them relative to the start of a given coordinate. The default is to assume there is a single contig in the gff, but if notthen the contig of insterest can be specified (`--contig`). There is also an experimental option to reverse complement a gff (`--invertcoords`) but I haven't implemented a way to fix the frame of CDS features, so those break.
+- `GFFSlicer.py` -  Script to extract sections of a GFF file while correcting their coordinates, making them relative to the start of a given coordinate. The default is to assume there is a single contig in the gff, but if not then the contig of interest can be specified (`--contig`). There is also an experimental option to reverse complement a gff (`--invertcoords`) but I haven't implemented a way to fix the frame of CDS features, so those break.
 - `GFFSubset.py` - Script to extract features of a gff into a new gff based on name or ID. It relies on `gffutils`. It assumes that the higher level feature is gene.
 - `gffutils2fasta.py` - Script to extract fasta subsequences out of an input fasta file using a corresponding GFF3 file. This is useful if you want for example the protein sequences of an annotation, or just the exons, etc. The script can extract the following types of features (case sensitive):
 	
@@ -40,8 +40,8 @@ The scripts are made to either parse the BLAST output, filter it or modify it, o
 	* similarity - modified version of the RepeatMasker gtf as produced by for example `gtfRM2gff.py`
 	* expressed_sequence_match - this is found in the output of MAKER as alignment of other proteins
 
-- `gtfRM2gff.py` - Script to transform the gtf of RepeatMasker (obtained with missleading option `-gff`) into a normal gff3. It also appends a color attribute to normal repeats (`-c`) and to simple repeats (`-s`) to be displayed in [The Integrative Genomics Viewer (IGV)](http://software.broadinstitute.org/software/igv/).
-- `totalcovergff.py` - Script to obtained the merged coordinates of all models in gff file (eg. from RepeatMasker either the gtf or gff produced with `gtfRM2gff.py`). Basically it produces a bed file from the gff file with overlapping features merged. If only the gff is given, then it will collapse all the repeats into non-overlapping interavals. If an associated fasta file is also provided (`--fasta`), then it will calculate the total coverage of the contigs within that fasta annotated in the gff.
+- `gtfRM2gff.py` - Script to transform the output of RepeatMasker (obtained with option `-gff` in RepeatMasker, which has a misleading name because it's a gtf) into a normal gff3. It also appends a color attribute to normal repeats (`-c`) and to simple repeats (`-s`) to be displayed in [The Integrative Genomics Viewer (IGV)](http://software.broadinstitute.org/software/igv/).
+- `totalcovergff.py` - Script to obtained the merged coordinates of all models in gff file (eg. from RepeatMasker either the gtf or gff produced with `gtfRM2gff.py`). Basically it produces a bed file from the gff file with overlapping features merged. If only the gff is given, then it will collapse all the repeats into non-overlapping intervals. If an associated fasta file is also provided (`--fasta`), then it will calculate the total coverage of the contigs within that fasta annotated in the gff.
 
 ## Miscellaneous
 
@@ -53,4 +53,4 @@ TODO
 
 ----
 
-*Disclaimer:* These scripts and example files are provided "as is" and without any express or implied warranties, including, without limitation, the implied warranties of merchantibility and fitness for a particular purpose.
+*Disclaimer:* These scripts and example files are provided "as is" and without any express or implied warranties, including, without limitation, the implied warranties of merchantability and fitness for a particular purpose.
