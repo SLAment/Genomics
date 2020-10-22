@@ -79,10 +79,10 @@ def remove_overlap(ranges):
 			result.append( (start, stop) )
 			current_start, current_stop = start, stop
 		else:
-			# segments overlap, replace
-			result[-1] = (current_start, stop)
 			# current_start already guaranteed to be lower
 			current_stop = max(current_stop, stop)
+			# segments overlap, replace
+			result[-1] = (current_start, current_stop) # SLAV: I modified this to update the stop too. (otherwise small ranges contained in a previous larger range will make the current stop smaller than they should)
 	return(result)
 
 # Get a clean name for a file
