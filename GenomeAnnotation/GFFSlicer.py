@@ -151,7 +151,7 @@ for line in GFFopen: # Without saving in memory, but then I can't access the nex
 initialbrokengen = []
 
 for line in goodlines:
-	if '#' in line:
+	if line.startswith( '#' ):
 		continue
 	elif 'Parent=' in line:
 		initialbrokengen.append(line)
