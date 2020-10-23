@@ -27,7 +27,7 @@ import argparse  # For the fancy options
 from argparse import RawTextHelpFormatter # To force argparse.ArgumentParser to recognize \n
 import datetime
 # ------------------------------------------------------
-version = 4.02
+version = 4.1
 versiondisplay = "{0:.2f}".format(version)
 
 # ============================
@@ -83,7 +83,7 @@ for line in GFFopen: # Without saving in memory, but then I can't access the nex
 		now = datetime.datetime.now()
 		gffslicerstr = "# Sliced from " + os.path.basename(args.GFF) + " using " + os.path.basename(sys.argv[0]) + " v. " + str(versiondisplay) + ' on ' + str(now) + '\n'
 		goodlines.append(gffslicerstr)
-	elif '#' in line:
+	elif line.startswith( '#' ):
 		goodlines.append(line)
 	elif line == '\n': # If the line is empty
 		pass		
