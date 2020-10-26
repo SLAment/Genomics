@@ -115,7 +115,12 @@ def getnewID(id):
 	return(newid)
 
 def gen():
-	sys.stdout.write("##gff-version 3\n")
+	## Get the original headers
+	for line in GFFopen:
+		if line.startswith( '#' ):
+			sys.stdout.write(line)
+	GFFopen.close()
+
 	# Add a line to mark the file with this script
 	now = datetime.datetime.now()
 	newhead = '# Original file ' + os.path.basename(args.GFF) + ' modified with GFFnummerator.py v. ' + str(versiondisplay) + ' on ' + str(now) +  '\n'
