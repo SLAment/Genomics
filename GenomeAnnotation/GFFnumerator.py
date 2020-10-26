@@ -29,7 +29,7 @@ import gffutils
 import gffutils.inspect as inspect
 # ------------------------------------------------------
 
-version = 2
+version = 2.1
 versiondisplay = "{0:.2f}".format(version)
 
 # ============================
@@ -103,7 +103,7 @@ allIDs = [feature.id for feature in db.all_features() if feature.featuretype in 
 if args.sample is not None:
 	newIDs = [args.sample + "{0:05d}".format(n) for n in range(1, nogenes + norepeats + 1)]
 else:
-	newIDs = ["feature.{0:05d}".format(n) for n in range(1, nogenes + 1)]
+	newIDs = ["feature.{0:05d}".format(n) for n in range(1, nogenes + norepeats + 1)]
 
 # ---------------------------
 ### Change IDs
