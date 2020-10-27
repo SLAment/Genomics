@@ -19,7 +19,7 @@ import gffutils
 import datetime
 import time
 # ------------------------------------------------------
-version = 1.1
+version = 1.2
 versiondisplay = "{0:.2f}".format(version)
 
 # Input from console
@@ -47,6 +47,7 @@ dbfnchoice = ':memory:'
 # http://daler.github.io/gffutils/database-ids.html
 id_spec={"gene": ["ID", "Name"], 
 	"mRNA": ["ID", "transcript_id"], 
+	"repeat": ["ID", "Name"], # output of gtfRM2gff.py
 	"similarity": ["Target"], 
 	"pseudogene": ["ID", "Name"], 
 	"pseudogenic_transcript": ["ID", "Name"], 
@@ -85,9 +86,8 @@ for strid in geneids:
 
 	except: # Then try gene Name
 		# Sometimes the same gene is there for different features
-		for gene in db.features_of_type('gene'): # Loop in the database until you fins it
+		for gene in db.features_of_type('gene'): # Loop in the database until you find it
 			genename = gene['Name'][0] # same as gene.attributes['Name'][0]
-			if strid == genename: 
+			if strid in genename: 
 				printgene(gene)
-
 
