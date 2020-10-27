@@ -33,9 +33,9 @@ import re
 import gffutils
 # ------------------------------------------------------
 
-version = 1.51
+version = 1.6
 versiondisplay = "{0:.2f}".format(version)
-supportedtypes = ["gene", "CDS", "cds", "exon", "noutrs", "similarity", "expressed_sequence_match"] # Unlike the CDS, Exons may contain the UTRs; noutrs is from start to stop codon without introns in nuleotides
+supportedtypes = ["gene", "CDS", "cds", "exon", "noutrs", "similarity", "expressed_sequence_match", "repeat"] # Unlike the CDS, Exons may contain the UTRs; noutrs is from start to stop codon without introns in nuleotides
 
 # ============================
 # Make a nice menu for the user
@@ -94,6 +94,7 @@ dbfnchoice = ':memory:'
 # http://daler.github.io/gffutils/database-ids.html
 id_spec={"gene": ["ID", "Name"], 
 	"mRNA": ["ID", "transcript_id"], 
+	"repeat": ["ID", "Name"], 
 	"similarity": ["Target"], 
 	"pseudogene": ["ID", "Name"], 
 	"pseudogenic_transcript": ["ID", "Name"], 
@@ -177,9 +178,9 @@ if args.type == "similarity":
 		# Print the sequence 
 		SeqIO.write(geneseq, output_handle, "fasta")
 
-### blastn alignments
-elif args.type == "expressed_sequence_match":
-	for gene in db.features_of_type('expressed_sequence_match'):
+### blastn alignments or the output of `gtfRM2gff.py`
+elif (args.type == "expressed_sequence_match") or (args.type == "repeat"):
+	for gene in db.features_of_type(args.type):
 		geneID = gene['ID'][0]
 		genename = gene['Name'][0] # same as gene.attributes['Name'][0]
 		seq_record = records_dict[gene.chrom] # The chromosome sequence
