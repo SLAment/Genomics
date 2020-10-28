@@ -9,7 +9,7 @@ Then I activate my environment:
 
     $ conda activate bioinformatics
 
-Notice that the scripts (should) all use python 3.
+Notice that the scripts (should) all use python 3. Tested only in Unix environments.
 
 ## BLAST
 
@@ -39,12 +39,12 @@ The scripts are made to either parse the BLAST output, filter it or modify it, o
 	* noutrs - this basically means to return a gene (including the introns) with the UTRs removed if present.
 	* similarity - manually modified version of the RepeatMasker gtf (might remove in the future)
 	* expressed_sequence_match - this is found in the output of MAKER as alignment of other proteins
-    * repeat -- modified version of the RepeatMasker gtf as produced by `gtfRM2gff.py`
+    * repeat - modified version of the RepeatMasker gtf as produced by `gtfRM2gff.py`
 
 **OBS** The script CAN'T deal with genes with multiple isoforms (mRNAs). If forced, it might fused exons were it shouldn't. Use with care.
 
 - `gtfRM2gff.py` - Script to transform the output of RepeatMasker (obtained with option `-gff` in RepeatMasker, which has a misleading name because it's a gtf) into a normal gff3. It also appends a color attribute to normal repeats (`-c`) and to simple repeats (`-s`) to be displayed in [The Integrative Genomics Viewer (IGV)](http://software.broadinstitute.org/software/igv/). 
-- `totalcovergff.py` - Script to obtained the merged coordinates of all models in gff file (eg. from RepeatMasker either the gtf or gff produced with `gtfRM2gff.py`). Basically it produces a bed file from the gff file with overlapping features merged. If only the gff is given, then it will collapse all the repeats into non-overlapping intervals. If an associated fasta file is also provided (`--fasta`), then it will calculate the total coverage of the contigs within that fasta annotated in the gff.
+- `totalcovergff.py` - Script to obtained the merged coordinates of all models in gff file (eg. from RepeatMasker either the gtf or gff produced with `gtfRM2gff.py`). Basically it produces a bed file from the gff file with overlapping features merged. If only the gff is given, then it will collapse all the repeats into non-overlapping intervals. If an associated fasta file is also provided (`--fasta`), then it will calculate the total coverage of the contigs within that fasta annotated in the gff. Notice that the "bed" file produced is in the base of the input file (base 1 with gtf or gff files).
 
 ## Miscellaneous
 
