@@ -13,26 +13,41 @@
 # +++++++++++++++++++++++++++++++++++++++++++++++++
 
 # ------------------------------------------------------
-import os # For the input name
-import sys
+import argparse  # For the fancy options
+# import os # For the input name
+# import sys
 import gffutils
 import datetime
 import time
 # ------------------------------------------------------
-version = 1.2
+version = 2.0
 versiondisplay = "{0:.2f}".format(version)
 
-# Input from console
-try:
-	gfffile = sys.argv[1]
-	geneids = sys.argv[2].split(",")
-except:
-	print("Usage: python " + sys.argv[0] + " annotation.gff3 gene1_ID,gene2_ID,gene3_ID... > subset.gff3")
-	print("Version " + versiondisplay)
-	print("Notice: The gene IDs can also be Names, but beware that they might not be unique in a given gff.")
-	sys.exit(1)
+# ============================
+# Make a nice menu for the user
+# ============================
+parser = argparse.ArgumentParser(description="* Extract features of a gff into a new gff based on name or ID *", epilog="The gene IDs can also be Names, but beware that they might not be unique in a given gff.")  # Create the object using class argparse
 
-	gffopen = open(gfffile, 'r')
+# Add options
+parser.add_argument('GFF', help="GFF3 file")
+parser.add_argument('geneIDs', help="List of genes separated by commas and no spaces (give ID or Name of gene). Eg. gene1_ID,gene2_name,gene3_ID")
+parser.add_argument('--keeprepeats', '-r', help="Along with the specified genes, keep also all the repeats in the gff (as from gtfRM2gff.py output)", default=False, action='store_true')
+
+# # extras
+parser.add_argument('--version', '-v', action='version', version='%(prog)s ' + versiondisplay)
+
+try:
+	# ArgumentParser parses arguments through the parse_args() method You can
+	# parse the command line by passing a sequence of argument strings to
+	# parse_args(). By default, the arguments are taken from sys.argv[1:]
+	args = parser.parse_args()
+	gffopen = open(args.GFF, 'r')
+	geneids = [gene for gene in args.geneIDs.split(",")]
+except IOError as msg:  # Check that the file exists
+	parser.error(str(msg)) 
+	parser.print_help()
+
+# ------------------------------------------------------
 
 # ---------------------------------
 # Make database
@@ -53,7 +68,7 @@ id_spec={"gene": ["ID", "Name"],
 	"pseudogenic_transcript": ["ID", "Name"], 
 	"expressed_sequence_match": ["ID", "Name"]} 
 
-db = gffutils.create_db(data = gfffile, 
+db = gffutils.create_db(data = args.GFF, 
 	keep_order = True,
 	dbfn = dbfnchoice,
 	# force = True, # force=True overwrite any existing databases.
@@ -75,7 +90,7 @@ def printgene(gene):
 # Print a header
 print("##gff-version 3")
 now = datetime.datetime.now()
-print('# Subset of ' + sys.argv[1] + ' extracted with GFFSubset.py v. ' + str(versiondisplay) + ' on ' + str(now))
+print(f'# Subset of {args.GFF} extracted with GFFSubset.py v. {versiondisplay} on {now}')
 
 
 # Parse the gene IDs:
@@ -90,4 +105,9 @@ for strid in geneids:
 			genename = gene['Name'][0] # same as gene.attributes['Name'][0]
 			if strid in genename: 
 				printgene(gene)
+
+# Print in the end also all the repeats in the gff if so desired
+if args.keeprepeats:
+	for repeat in db.features_of_type('repeat'):
+		print(repeat)
 
