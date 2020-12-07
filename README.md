@@ -17,6 +17,7 @@ The scripts are made to either parse the BLAST output, filter it or modify it, o
 
 - `BLAST_tabularparser.py` - The input is a BLAST tabular file produced with the typical `blastn` coomand using `-outfmt 6`.
 - `BLASTstitcher.py` - Often the output of BLAST hits is fragmented into several lines that could be collapsed into a single one. This script does just that. The input is also the BLAST tabular file produced with `-outfmt 6`.
+- `genometblastn.py` - Small script to do tblastn searches using an input query protein fasta and an input genome fasta.
 - `query2haplotype.py` - Extract haplotypes (in fasta) of an assembly based on an input query fasta. It makes a blastn search to extract the hits sequences from the genome. If the `--haplo` option is used, then it searches for a haplotype instead using the query sequences as flanking regions.
 - `query2hitseq.py` - An earlier version of `query2haplotype.py` without the `--haplo` option (so it only gives the best hits in fasta format), but it has one extra option to get only the top hit (`--tophit`) which I didn't bother implementing in `query2haplotype.py`.
 
