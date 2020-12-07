@@ -95,7 +95,7 @@ def namebase(file):
 # Make a local database with the given fasta file
 def makeBLASTdb(fasta, databasename, dbtype):
 	# databasename = name + '_db/' + name + '_db' # Name of the database
-	createdb = "makeblastdb -in " + fasta + " -out " + databasename + " -dbtype " + dbtype + " -parse_seqids" # BLAST command
+	createdb = f"makeblastdb -in {fasta} -out {databasename} -dbtype {dbtype} -parse_seqids" # BLAST command
 	# if args.superverbose: # Print it if necessary
 	# 	print("Blast command:", createdb)
 	process = subprocess.Popen(createdb.split(), stdout=subprocess.PIPE) # pipe the command to the shell
