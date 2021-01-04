@@ -24,7 +24,7 @@ import subprocess # For the database
 from shutil import rmtree # For removing directories
 import argparse # For the fancy options
 # ------------------------------------------------------
-version = 1.4
+version = 1.401
 versiondisplay = "{0:.2f}".format(version)
 
 # Make a nice menu for the user
@@ -38,7 +38,7 @@ parser.add_argument("--haplo", "-H", help="Use sequence(s) in query to try to ex
 parser.add_argument("--task", "-T", help="Task for the blastn program. Default is 'blastn', other options are 'blastn-short', 'dc-megablast', 'megablast' or 'vecscreen'", type=str, default="blastn")
 parser.add_argument("--evalue", "-e", help="Minimum e-value of BLAST hit to be considered (default 0.00001)", type=float, default=0.00001)
 # More filtering options
-parser.add_argument("--extrabp", "-f", help="Extra base pairs cut next to the start and end of the BLAST hits (default 0)", type=int, default=0)
+parser.add_argument("--extrabp", "-f", help="Extra base pairs cut next to the start and end of the BLAST hits or haplotypes (default 0)", type=int, default=0)
 parser.add_argument("--minsize", "-s", help="Minimum size of BLAST hit to be considered (default 0 bp)", type=int, default=0)
 parser.add_argument("--vicinity", "-c", help="Max distance between 5 and 3 end hits to form a haplotype (default 10000 bp)", type=int, default=10000)
 parser.add_argument("--minhaplo", "-m", help="Minimum size of haplotype size (default 0 bp)", type=int, default=0)
