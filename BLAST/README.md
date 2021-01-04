@@ -17,9 +17,9 @@ For additional options see:
 
 ---
 
-For filtering of BLAST tables, you can use `BLAST_tabularparser.py`. As input it expects the table produced with the table format 6 (outfmt=6).
+For filtering of BLAST tables, you can use `BLAST_tabularparser.py`. As input it expects the file produced with the BLAST table format 6 (outfmt=6).
 
 ---
 
-Although very useful, `query2haplotype.py` and `query2hitseq.py` only work with nucleotide sequences. I made `genometblastn.py` to do tBLASTn searches using a **protein sequence as query**. It does NOT make haplotypes at the moment.
+Although very useful, `query2haplotype.py` and `query2hitseq.py` only work with nucleotide sequences as input. I made `genometblastn.py` to do tBLASTn searches using a **protein sequence as query**. It does NOT make haplotypes at the moment.
 
