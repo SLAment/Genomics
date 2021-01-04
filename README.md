@@ -53,8 +53,8 @@ TODO
 
 ## Pylogenetics
 
-- `orthogrs2fasta.py` - Script to parse the Orthogroups.csv and SingleCopyOrthogroups.txt files produced by [OrthoFinder](https://github.com/davidemms/OrthoFinder) and to extract each orthogroup in a fasta file.
-- `orthogrs_parser.py` - Script to parse the Orthogroups.csv output file of Orthofinder and manage it for the *Podospora* project. Useful if you want to find orthogroups where all samples have X number of orthologs (as defined by `--nugrps`). It can also return just sample of a given number of orghologs groups randomly (`--sample`). I also have certain type of orthogroups that I call "cool". An orthogroup is cool if:
+- `orthogrs2fasta.py` - Script to parse the *Orthogroups.csv* and *SingleCopyOrthogroups.txt* files produced by [OrthoFinder](https://github.com/davidemms/OrthoFinder) and to extract each orthogroup in a fasta file.
+- `orthogrs_parser.py` - Script to parse the Orthogroups.csv output file of [OrthoFinder](https://github.com/davidemms/OrthoFinder) and manage it for the *Podospora* project. Useful if you want to find orthogroups where all samples have X number of orthologs (as defined by `--nugrps`). It can also return just sample of a given number of orghologs groups randomly (`--sample`). I also have certain type of orthogroups that I call "cool". An orthogroup is cool if:
     
     * All species are represented
     * It excludes in-paralogs (duplications within species)
