@@ -42,7 +42,7 @@ The scripts are made to either parse the BLAST output, filter it or modify it, o
 	* expressed_sequence_match - this is found in the output of MAKER as alignment of other proteins
     * repeat - modified version of the RepeatMasker gtf as produced by `gtfRM2gff.py`
 
-**OBS** The script CAN'T deal with genes with multiple isoforms (mRNAs). If forced, it might fused exons were it shouldn't. Use with care.
+**OBS** The script CAN'T deal with genes with multiple isoforms (mRNAs). If forced, it might fuse exons were it shouldn't. Use with care.
 
 - `gtfRM2gff.py` - Script to transform the output of RepeatMasker (obtained with option `-gff` in RepeatMasker, which has a misleading name because it's a gtf) into a normal gff3. It also appends a color attribute to normal repeats (`-c`) and to simple repeats (`-s`) to be displayed in [The Integrative Genomics Viewer (IGV)](http://software.broadinstitute.org/software/igv/). 
 - `totalcovergff.py` - Script to obtained the merged coordinates of all models in gff file (eg. from RepeatMasker either the gtf or gff produced with `gtfRM2gff.py`). Basically it produces a bed file from the gff file with overlapping features merged. If only the gff is given, then it will collapse all the repeats into non-overlapping intervals. If an associated fasta file is also provided (`--fasta`), then it will calculate the total coverage of the contigs within that fasta annotated in the gff. Notice that the "bed" file produced is in the base of the input file (base 1 with gtf or gff files).
@@ -53,7 +53,14 @@ TODO
 
 ## Pylogenetics
 
-TODO
+- `orthogrs2fasta.py` - Script to parse the Orthogroups.csv and SingleCopyOrthogroups.txt files produced by [OrthoFinder](https://github.com/davidemms/OrthoFinder) and to extract each orthogroup in a fasta file.
+- `orthogrs_parser.py` - Script to parse the Orthogroups.csv output file of Orthofinder and manage it for the *Podospora* project. Useful if you want to find orthogroups where all samples have X number of orthologs (as defined by `--nugrps`). It can also return just sample of a given number of orghologs groups randomly (`--sample`). I also have certain type of orthogroups that I call "cool". An orthogroup is cool if:
+    
+    * All species are represented
+    * It excludes in-paralogs (duplications within species)
+    * It includes groups of paralogs, but not the exact same number per species
+
+They are cool because in theory, shared duplications (paralogs) are phylogenetically informative.
 
 ----
 
