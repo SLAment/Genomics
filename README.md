@@ -32,7 +32,7 @@ The scripts are made to either parse the BLAST output, filter it or modify it, o
 - `GFFnumerator.py` - Script to re-name the IDs of the genes and features of a GFF3 file. It prints to the standard output. It depends on the library `gffutils`. **OBS** The script CAN'T deal with genes with multiple isoforms (mRNAs). If forced, it might fused exons were it shouldn't. Use with care.
 - `GFFSlicer.py` -  Script to extract sections of a GFF file while correcting their coordinates, making them relative to the start of a given coordinate. The default is to assume there is a single contig in the gff, but if not then the contig of interest can be specified (`--contig`). There is also an experimental option to reverse complement a gff (`--invertcoords`) but I haven't implemented a way to fix the frame of CDS features, so those break.
 - `GFFSubset.py` - Script to extract features of a gff into a new gff based on name or ID. It relies on `gffutils`. It assumes that the higher level feature is gene.
-- `gffutils2fasta.py` - Script to extract fasta subsequences out of an input fasta file using a corresponding GFF3 file. This is useful if you want for example the protein sequences of an annotation, or just the exons, etc. The script can extract the following types of features (case sensitive):
+- `gffutils2fasta.py` - Script to extract fasta sequences out of an input fasta file using a corresponding GFF3 file. This is useful if you want for example the protein sequences of an annotation, or just the exons, etc. The script can extract the following types of features (case sensitive):
 	
 	* gene
 	* CDS - It can also be written as "cds"
