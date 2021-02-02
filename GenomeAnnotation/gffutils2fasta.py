@@ -7,15 +7,22 @@
 # ================== gffutils2fasta =================
 # Script to extract fasta subsequences out of an input fasta file using a
 # corresponding GFF3 file.
-# The script assumes that the gene is the higher level in the attributes. 
 
-# Sources
+# SOURCES
 # https://pythonhosted.org/gffutils/autodocs/gffutils.create_db.html
 # http://daler.github.io/gffutils/database-ids.html#merge-strategy
 # https://github.com/daler/gffutils/blob/master/gffutils/test/test.py
 # https://github.com/daler/gffutils/issues/61
 # https://pythonhosted.org/gffutils/database-schema.html
+# https://github.com/The-Sequence-Ontology/Specifications/blob/master/gff3.md
 
+# CAVEATS:
+# - The script assumes that the gene is the higher level in the attributes (i.e. polycistronic transcripts are not compatible)
+# - The script CAN'T deal with genes with multiple isoforms (mRNAs). If forced, it might fuse exons were it shouldn't.
+# - It can't deal with circular features
+
+
+## VERSION notes
 # version 1.5 - "from Bio.Alphabet import generic_dna" was removed from BioPython >1.76. See https://biopython.org/wiki/Alphabet
 # ==================================================
 # Sandra Lorena Ament Velasquez
@@ -33,7 +40,7 @@ import re
 import gffutils
 # ------------------------------------------------------
 
-version = 1.6
+version = 1.61
 versiondisplay = "{0:.2f}".format(version)
 supportedtypes = ["gene", "CDS", "cds", "exon", "noutrs", "similarity", "expressed_sequence_match", "repeat"] # Unlike the CDS, Exons may contain the UTRs; noutrs is from start to stop codon without introns in nuleotides
 
