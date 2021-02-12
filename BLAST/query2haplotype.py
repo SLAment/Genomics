@@ -24,11 +24,11 @@ import subprocess # For the database
 from shutil import rmtree # For removing directories
 import argparse # For the fancy options
 # ------------------------------------------------------
-version = 1.401
+version = 1.41
 versiondisplay = "{0:.2f}".format(version)
 
 # Make a nice menu for the user
-parser = argparse.ArgumentParser(description="* Extract BLAST hits or haplotypes *", epilog="Notice the script doesn't work properly if the input sequences have tracks of IUPAC symbols at the beginning and end of the sequences, or '?' symbols anywhere.") # Create the object using class argparse
+parser = argparse.ArgumentParser(description="* Extract BLAST hits or haplotypes *", epilog="Warning: the script doesn't work properly if the input sequences have tracks of IUPAC symbols at the beginning and end of the sequences, or '?' symbols anywhere.") # Create the object using class argparse
 
 # Mandatory options
 parser.add_argument('assembly', help="Fasta file to extract from")
