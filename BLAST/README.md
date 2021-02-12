@@ -37,15 +37,16 @@ If you would BLAST the sequence to itself, one would expect to have a 100% ident
 So let's use my script `query2haplotype.py`!
 
     $ /Users/sandralorena/Dropbox/Programming/GitHubRepos/Genomics/BLAST/query2haplotype.py toy.fa toy.fa
+    FASTA-Reader: Ignoring invalid residues at position(s): On line 2: 1-4
     >toy_1-46
     ????GAGCTGGATGAGCTGGATGAGGAGCTGGATGAGGAGCTGGAT
 
-Wait, the sequence is shorter, why?! And it complained. If we look at the output BLAST table:
+Wait, the sequence is shorter, why?! And it complained about positions 1-4. If we look at the output BLAST table:
 
     $ cat toyVStoy-hits.tab
     toy toy 100.000 46  0   0   1   46  1   46  7.00e-23    84.2
 
-Suddenly the coordinates go from 1 to 46, even tho the original sequence should go from 1 to 50, and if the `?` symbols are ignored, then the coordinates should still be from 5 to 50, not from 1 to 46. So probably the sequence gets `?` symbols removed when making the database, and the coordinates no longer match your input fastas! My script `query2haplotype.py`, however, is still working the original coordinates, and so the output is wrong.
+Suddenly the coordinates go from 1 to 46, even tho the original sequence should go from 1 to 50. If the `?` symbols are ignored, then the coordinates should still be from 5 to 50. So probably the sequence gets `?` symbols removed when making the database, and the coordinates no longer match your input fastas! My script `query2haplotype.py`, however, is still working with the original coordinates, and so the output is wrong.
 
 What happens then with `N` symbols? Imagine that the toy sequence is now:
 
@@ -65,7 +66,7 @@ Again, the sequenced is chopped. How is the table looking?
 
 Now, the coordiantes of the query are correct, but **not the coordinates of the subject**!! Hence, when my script is slicing the original subject sequence, the output is again incorrect.
 
-Finally, what if you are using IUPAC symbols, instead of just `N`.
+Finally, what if you are using other IUPAC symbols, instead of just `N`.
 
     $ cat toy.fa
     >toy
