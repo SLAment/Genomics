@@ -36,7 +36,7 @@ If you would BLAST the sequence to itself, one would expect to have a 100% ident
 
 So let's use my script `query2haplotype.py`!
 
-    $ /Users/sandralorena/Dropbox/Programming/GitHubRepos/Genomics/BLAST/query2haplotype.py toy.fa toy.fa
+    $ python query2haplotype.py toy.fa toy.fa
     FASTA-Reader: Ignoring invalid residues at position(s): On line 2: 1-4
     >toy_1-46
     ????GAGCTGGATGAGCTGGATGAGGAGCTGGATGAGGAGCTGGAT
@@ -55,7 +55,7 @@ What happens then with `N` symbols? Imagine that the toy sequence is now:
     NNNNGAGCTGGATGAGCTGGATGAGGAGCTGGATGAGGAGCTGGATGAGG
 
     $ rm -r toy_db # Otherwise it will use the old sequence
-    $ /Users/sandralorena/Dropbox/Programming/GitHubRepos/Genomics/BLAST/query2haplotype.py toy.fa toy.fa
+    $ python query2haplotype.py toy.fa toy.fa
     >toy_1-46
     NNNNGAGCTGGATGAGCTGGATGAGGAGCTGGATGAGGAGCTGGAT
 
@@ -73,7 +73,7 @@ Finally, what if you are using other IUPAC symbols, instead of just `N`.
     YRYRGAGCTGGATGAGCTGGATGAGGAGCTGGATGAGGAGCTGGATGAGG
 
     $ rm -r toy_db
-    $ /Users/sandralorena/Dropbox/Programming/GitHubRepos/Genomics/BLAST/query2haplotype.py toy.fa toy.fa
+    $ python query2haplotype.py toy.fa toy.fa
     >toy_5-50
     GAGCTGGATGAGCTGGATGAGGAGCTGGATGAGGAGCTGGATGAGG
 
@@ -86,7 +86,7 @@ Finally the coordinates match! But I guess here the ambigous bases were not good
     >toy
     GAGCTGGATGAGCTGGATGAGGYRYRAGCTGGATGAGGAGCTGGATGAGG
     $ rm -r toy_db
-    $ /Users/sandralorena/Dropbox/Programming/GitHubRepos/Genomics/BLAST/query2haplotype.py toy.fa toy.fa
+    $ python query2haplotype.py toy.fa toy.fa
     >toy_1-50
     GAGCTGGATGAGCTGGATGAGGYRYRAGCTGGATGAGGAGCTGGATGAGG
 
