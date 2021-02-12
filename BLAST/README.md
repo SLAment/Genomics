@@ -23,3 +23,74 @@ For filtering of BLAST tables, you can use `BLAST_tabularparser.py`. As input it
 
 Although very useful, `query2haplotype.py` and `query2hitseq.py` only work with nucleotide sequences as input. I made `genometblastn.py` to do tBLASTn searches using a **protein sequence as query**. It does NOT make haplotypes at the moment.
 
+---
+
+## Note on BLAST behavior with missing data
+
+So say that you have a sequence with `?` symbols on it. For example this toy 50bp long sequence:
+    
+    >toy
+    ????GAGCTGGATGAGCTGGATGAGGAGCTGGATGAGGAGCTGGATGAGG
+
+If you would BLAST the sequence to itself, one would expect to have a 100% identity hit that covers the whole sequence, right? Wait, why would you want to do that, you ask? Sometimes you want to BLAST a query to a collection of sequences and see if your query is found there exactly. 
+
+So let's use my script `query2haplotype.py`!
+
+    $ /Users/sandralorena/Dropbox/Programming/GitHubRepos/Genomics/BLAST/query2haplotype.py toy.fa toy.fa
+    >toy_1-46
+    ????GAGCTGGATGAGCTGGATGAGGAGCTGGATGAGGAGCTGGAT
+
+Wait, the sequence is shorter, why?! And it complained. If we look at the output BLAST table:
+
+    $ cat toyVStoy-hits.tab
+    toy toy 100.000 46  0   0   1   46  1   46  7.00e-23    84.2
+
+Suddenly the coordinates go from 1 to 46, even tho the original sequence should go from 1 to 50, and if the `?` symbols are ignored, then the coordinates should still be from 5 to 50, not from 1 to 46. So probably the sequence gets `?` symbols removed when making the database, and the coordinates no longer match your input fastas! My script `query2haplotype.py`, however, is still working the original coordinates, and so the output is wrong.
+
+What happens then with `N` symbols? Imagine that the toy sequence is now:
+
+    $ cat toy.fa
+    >toy
+    NNNNGAGCTGGATGAGCTGGATGAGGAGCTGGATGAGGAGCTGGATGAGG
+
+    $ rm -r toy_db # Otherwise it will use the old sequence
+    $ /Users/sandralorena/Dropbox/Programming/GitHubRepos/Genomics/BLAST/query2haplotype.py toy.fa toy.fa
+    >toy_1-46
+    NNNNGAGCTGGATGAGCTGGATGAGGAGCTGGATGAGGAGCTGGAT
+
+Again, the sequenced is chopped. How is the table looking?
+    
+    $ cat toyVStoy-hits.tab
+    toy toy 100.000 46  0   0   5   50  1   46  7.70e-23    84.2
+
+Now, the coordiantes of the query are correct, but **not the coordinates of the subject**!! Hence, when my script is slicing the original subject sequence, the output is again incorrect.
+
+Finally, what if you are using IUPAC symbols, instead of just `N`.
+
+    $ cat toy.fa
+    >toy
+    YRYRGAGCTGGATGAGCTGGATGAGGAGCTGGATGAGGAGCTGGATGAGG
+
+    $ rm -r toy_db
+    $ /Users/sandralorena/Dropbox/Programming/GitHubRepos/Genomics/BLAST/query2haplotype.py toy.fa toy.fa
+    >toy_5-50
+    GAGCTGGATGAGCTGGATGAGGAGCTGGATGAGGAGCTGGATGAGG
+
+    $ cat toyVStoy-hits.tab
+    toy toy 100.000 46  0   0   5   50  5   50  8.47e-23    84.2
+
+Finally the coordinates match! But I guess here the ambigous bases were not good to be counted as a match. What if the bases are in the middle of the sequence?
+
+    $ cat toy.fa
+    >toy
+    GAGCTGGATGAGCTGGATGAGGYRYRAGCTGGATGAGGAGCTGGATGAGG
+    $ rm -r toy_db
+    $ /Users/sandralorena/Dropbox/Programming/GitHubRepos/Genomics/BLAST/query2haplotype.py toy.fa toy.fa
+    >toy_1-50
+    GAGCTGGATGAGCTGGATGAGGYRYRAGCTGGATGAGGAGCTGGATGAGG
+
+This time it got the full sequence! Probably because it's a short small track of ambigous bases in between identical segments, so it still works. However, if I put the ambigous sites at the end, they get chopped (try it for yourself!).
+
+In conclusion, do not use sequences with `?` and `N`. Ambigous bases are also dangerous if they are on the start or the end of the sequences.
+
+(This was tested in BLAST 2.9.0+ and BLAST 2.10.1+)
