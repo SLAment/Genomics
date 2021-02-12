@@ -42,7 +42,12 @@ parser.add_argument("--extrabp", "-f", help="Extra base pairs cut next to the st
 parser.add_argument("--minsize", "-s", help="Minimum size of BLAST hit to be considered (default 0 bp)", type=int, default=0)
 parser.add_argument("--vicinity", "-c", help="Max distance between 5 and 3 end hits to form a haplotype (default 10000 bp)", type=int, default=10000)
 parser.add_argument("--minhaplo", "-m", help="Minimum size of haplotype size (default 0 bp)", type=int, default=0)
-parser.add_argument("--noself", "-n", help="Attempt to remove BLAST selfhits (only with --haplo)", default=False, action='store_true')
+
+# Make a mutualy-exclusive group
+selfgroup = parser.add_mutually_exclusive_group()
+selfgroup.add_argument("--self", "-N", help="Report only the hits that are identical to query (only with --haplo)", default=False, action='store_true')
+selfgroup.add_argument("--noself", "-n", help="Attempt to remove BLAST selfhits (only with --haplo)", default=False, action='store_true')
+
 # Extras
 parser.add_argument("--blastab", "-b", help="The query is not a fasta, but a BLAST tab file to be used directly instead of doing the whole BLAST", default=False, action='store_true')
 parser.add_argument("--seqid", "-i", help="Name of query gene to be extracted from the input multifasta QUERY file. eg. Pa_6_4990", type=str)
@@ -198,9 +203,15 @@ if args.haplo: # We are looking for entire haplotypes and the blast is only the 
 				else:
 					end_final = end + args.extrabp
 
+				# if "MarorPlavaka-3" not in hitseq.id: 
+				# 	continue
+
 				if args.noself: # The name of the query and the subject is the same, and the whole of the query sequence
 					if (hitseq.id == ctg) and (start == 1) and (end == len(hitseq.seq)): 
 						continue # It's a selfhit, so ignore
+				elif args.self:
+					if (hitseq.id != ctg) or (start != 1) or (end != len(hitseq.seq)): 
+						continue # It's not a selfhit, so ignore
 
 				# Slice it 
 				slice = hitseq[start_final:end_final]
