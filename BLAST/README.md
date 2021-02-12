@@ -66,6 +66,40 @@ Again, the sequenced is chopped. How is the table looking?
 
 Now, the coordiantes of the query are correct, but **not the coordinates of the subject**!! Hence, when my script is slicing the original subject sequence, the output is again incorrect.
 
+What if the track of `N`s is in the middle?
+
+    $ cat toy.fa
+    >toy
+    GAGCTGGATGAGCTGGATGANNNNGGAGCTGGATGAGGAGCTGGATGAGG 
+    $ rm -r toy_db
+    $ python query2haplotype.py toy.fa toy.fa
+    >toy_1-50
+    GAGCTGGATGAGCTGGATGANNNNGGAGCTGGATGAGGAGCTGGATGAGG
+    $ cat toyVStoy-hits.tab
+    toy toy 100.000 50  0   0   1   50  1   50  1.26e-20    77.0
+
+That looks much better, at least the `N`s don't seem to be breaking the hit, at least at this small size. Maybe bigger tracks would be an issue.
+    
+    $ cat toy.fa
+    >toy
+    GAGCTGGATGAGCTGGATGANNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNGGAGCTGGATGAGGAGCTGGATGAGG
+    $ rm -r toy_db
+    $ /Users/sandralorena/Dropbox/Programming/GitHubRepos/Genomics/BLAST/query2haplotype.py toy.fa toy.fa
+    >toy_75-100
+    GGAGCTGGATGAGGAGCTGGATGAGG
+    >toy_1-20
+    GAGCTGGATGAGCTGGATGA
+    $ cat toyVStoy-hits.tab
+    toy toy 100.000 26  0   0   75  100 75  100 2.67e-11    48.2
+    toy toy 100.000 20  0   0   1   20  1   20  4.82e-08    37.4
+
+Indeed! It got broken, but using `-H` that get's fixed.
+    
+    $ /Users/sandralorena/Dropbox/Programming/GitHubRepos/Genomics/BLAST/query2haplotype.py toy.fa toy.fa -H
+    >toy_1-100
+    GAGCTGGATGAGCTGGATGANNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
+    NNNNNNNNNNNNNNGGAGCTGGATGAGGAGCTGGATGAGG
+
 Finally, what if you are using other IUPAC symbols, instead of just `N`.
 
     $ cat toy.fa
