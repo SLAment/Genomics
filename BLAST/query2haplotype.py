@@ -28,7 +28,7 @@ version = 1.401
 versiondisplay = "{0:.2f}".format(version)
 
 # Make a nice menu for the user
-parser = argparse.ArgumentParser(description="* Extract BLAST hits or haplotypes *", epilog="") # Create the object using class argparse
+parser = argparse.ArgumentParser(description="* Extract BLAST hits or haplotypes *", epilog="Notice the script doesn't work properly if the input sequences have tracks of IUPAC symbols at the beginning and end of the sequences, or '?' symbols anywhere.") # Create the object using class argparse
 
 # Mandatory options
 parser.add_argument('assembly', help="Fasta file to extract from")
@@ -45,7 +45,7 @@ parser.add_argument("--minhaplo", "-m", help="Minimum size of haplotype size (de
 
 # Make a mutualy-exclusive group
 selfgroup = parser.add_mutually_exclusive_group()
-selfgroup.add_argument("--self", "-N", help="Report only the hits that are identical to query (only with --haplo)", default=False, action='store_true')
+selfgroup.add_argument("--self", "-N", help="Attempt to report only the hits that are identical to query (only with --haplo)", default=False, action='store_true')
 selfgroup.add_argument("--noself", "-n", help="Attempt to remove BLAST selfhits (only with --haplo)", default=False, action='store_true')
 
 # Extras
