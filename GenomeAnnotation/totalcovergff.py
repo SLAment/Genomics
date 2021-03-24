@@ -23,7 +23,7 @@ import sys  # To exit the script, and to pipe out
 import os  # For the input name
 # ------------------------------------------------------
 
-version = 2.1
+version = 2.2
 versiondisplay = "{0:.2f}".format(version)
 
 # ============================
@@ -33,6 +33,7 @@ parser = argparse.ArgumentParser(description="* Produce a BED file from an input
 
 # Add options
 parser.add_argument('GFF', help="GFF3 file")
+parser.add_argument("--bed", "-b", help="Input is bed file already, in which case the output has overlaps merged", default=False, action='store_true')
 parser.add_argument("--fasta", "-f", help="The corresponding assembly to calculate percentage of coverage", type=str)
 parser.add_argument("--exclude", "-e", help="Exclude contig(s) in format ctg1,ctg2,ctg3", type=str, default = '')
 parser.add_argument("--excludestr", "-E", help="Exclude contig(s) that contain the given string", type=str)
@@ -96,8 +97,13 @@ for line in gffopen:
 		cols = line.rstrip("\n").split("\t")
 
 		contig = cols[0]
-		start = int(cols[3])
-		end = int(cols[4])
+
+		if args.bed:
+			start = int(cols[1])
+			end = int(cols[2])
+		else:
+			start = int(cols[3])
+			end = int(cols[4])
 
 		if contig in list(gffdic.keys()):
 			gffdic[contig].append([start, end])
