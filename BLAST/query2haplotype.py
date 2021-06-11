@@ -8,11 +8,12 @@
 # genome. If the --haplo option is used, then it searches for a haplotype
 # instead.
 
+# version 1.5 - added identity argument, and changed the -i flag to -I
 # version 1.3 - "from Bio.Alphabet import generic_dna" was removed from BioPython >1.76. See https://biopython.org/wiki/Alphabet
 # ==================================================
 # Sandra Lorena Ament Velasquez
 # Johannesson Lab, Evolutionary Biology Center, Uppsala University, Sweden
-# 2019/05/23
+# 2019/05/23, 2021/06/11
 # +++++++++++++++++++++++++++++++++++++++++++++++++
 
 # ------------------------------------------------------
@@ -24,7 +25,7 @@ import subprocess # For the database
 from shutil import rmtree # For removing directories
 import argparse # For the fancy options
 # ------------------------------------------------------
-version = 1.41
+version = 1.5
 versiondisplay = "{0:.2f}".format(version)
 
 # Make a nice menu for the user
@@ -37,6 +38,7 @@ parser.add_argument('query', help="Fasta file of the query sequence(s) in nucleo
 parser.add_argument("--haplo", "-H", help="Use sequence(s) in query to try to extract haplotypes instead", default=False, action='store_true')
 parser.add_argument("--task", "-T", help="Task for the blastn program. Default is 'blastn', other options are 'blastn-short', 'dc-megablast', 'megablast' or 'vecscreen'", type=str, default="blastn")
 parser.add_argument("--evalue", "-e", help="Minimum e-value of BLAST hit to be considered (default 0.00001)", type=float, default=0.00001)
+parser.add_argument("--identity", "-i", help="Minimum percentage of identity of BLAST hit to be considered (default 0)", type=float, default=0)
 # More filtering options
 parser.add_argument("--extrabp", "-f", help="Extra base pairs cut next to the start and end of the BLAST hits or haplotypes (default 0)", type=int, default=0)
 parser.add_argument("--minsize", "-s", help="Minimum size of BLAST hit to be considered (default 0 bp)", type=int, default=0)
@@ -50,7 +52,7 @@ selfgroup.add_argument("--noself", "-n", help="Attempt to remove BLAST selfhits 
 
 # Extras
 parser.add_argument("--blastab", "-b", help="The query is not a fasta, but a BLAST tab file to be used directly instead of doing the whole BLAST", default=False, action='store_true')
-parser.add_argument("--seqid", "-i", help="Name of query gene to be extracted from the input multifasta QUERY file. eg. Pa_6_4990", type=str)
+parser.add_argument("--seqid", "-I", help="Name of query gene to be extracted from the input multifasta QUERY file. eg. Pa_6_4990", type=str)
 parser.add_argument("--threads", "-t", help="Number of threads for BLAST. Default: 1", default="1", type=int) # nargs='+' All, and at least one, argument
 parser.add_argument('--temp', '-u', help="Path and directory where temporary files are written in style path/to/dir/. Default: working directory", default='./')
 parser.add_argument('--clean', '-C', help="Erase the temporary directories and files when finish", default=False, action='store_true')
@@ -144,11 +146,11 @@ if not args.blastab:
 	if args.seqid: # Only one sequence
 		outputhits = args.temp + queryseq.id + "VS" + nameref + "-" + "hits.tab"
 		query_string = '>' + queryseq.id + '\n' + str(queryseq.seq)
-		blast_command = NcbiblastnCommandline(cmd='blastn', out=outputhits, outfmt=6, db=databasename, evalue=args.evalue, num_threads=args.threads, task=args.task)
+		blast_command = NcbiblastnCommandline(cmd='blastn', out=outputhits, outfmt=6, db=databasename, evalue=args.evalue, perc_identity=args.identity, num_threads=args.threads, task=args.task)
 		stdout, stderr = blast_command(stdin=query_string)
 	else: # Multifasta
 		outputhits = args.temp + nameqry + "VS" + nameref + "-" + "hits.tab"
-		blast_command = NcbiblastnCommandline(query=args.query, cmd='blastn', out=outputhits, outfmt=6, db=databasename, evalue=args.evalue, num_threads=args.threads, task=args.task)
+		blast_command = NcbiblastnCommandline(query=args.query, cmd='blastn', out=outputhits, outfmt=6, db=databasename, evalue=args.evalue, perc_identity=args.identity, num_threads=args.threads, task=args.task)
 		stdout, stderr = blast_command()
 
 	# Read back
