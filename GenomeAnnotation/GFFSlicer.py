@@ -81,7 +81,7 @@ for line in GFFopen: # Without saving in memory, but then I can't access the nex
 		goodlines.append(line)
 		# Add a line to mark the file with this script
 		now = datetime.datetime.now()
-		gffslicerstr = "# Sliced from " + os.path.basename(args.GFF) + " using " + os.path.basename(sys.argv[0]) + " v. " + str(versiondisplay) + ' on ' + str(now) + '\n'
+		gffslicerstr = "# Sliced from " + os.path.basename(args.GFF) + " using " + os.path.basename(sys.argv[0]) + " v. " + str(versiondisplay) + ' on ' + str(now) + '\n'
 		goodlines.append(gffslicerstr)
 	elif line.startswith( '#' ):
 		goodlines.append(line)
