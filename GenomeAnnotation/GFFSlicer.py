@@ -27,7 +27,7 @@ import argparse  # For the fancy options
 from argparse import RawTextHelpFormatter # To force argparse.ArgumentParser to recognize \n
 import datetime
 # ------------------------------------------------------
-version = 4.1
+version = 4.2
 versiondisplay = "{0:.2f}".format(version)
 
 # ============================
@@ -87,7 +87,7 @@ for line in GFFopen: # Without saving in memory, but then I can't access the nex
 		goodlines.append(line)
 	elif line == '\n': # If the line is empty
 		pass		
-	elif '>' in line: # We reached a fasta sequence (assumes the gff stops there)
+	elif '>' == line[0]: # We reached a fasta sequence (assumes the gff stops there)
 		break # Stop reading everything.
 	else:
 		cols = line.rstrip("\n").split("\t")		# break the line into columns defined by the tab
