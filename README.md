@@ -62,6 +62,21 @@ TODO
 
 They are cool because, in theory, shared duplications (paralogs) are phylogenetically informative.
 
+## PopGen
+
+Scripts for population genetics, mostly vcf file manipulation.
+
+- `vcfNAreport.py` - Little script to report ammount of missing data in a vcf file per sample. 
+
+For example, you could look for samples that have more than 1% missing sites like:
+
+	$ python vcfNAreport.py Example.vcf.gz -z | awk '$4 > 0.01'
+	Sample  Total_sites     Missing_sites   Missing%
+	Sample1    35684   34713   0.97279
+	Sample2    35684   1346    0.03772
+	Sample3    35684   440     0.01233
+
+
 ----
 
 *Disclaimer:* These scripts and example files are provided "as is" and without any express or implied warranties, including, without limitation, the implied warranties of merchantability and fitness for a particular purpose.
