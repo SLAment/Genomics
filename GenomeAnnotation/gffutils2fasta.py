@@ -23,6 +23,7 @@
 
 
 ## VERSION notes
+# version 1.7 - Made it more tolerable of CDS without IDs and added an option to extract pseudogenes
 # version 1.5 - "from Bio.Alphabet import generic_dna" was removed from BioPython >1.76. See https://biopython.org/wiki/Alphabet
 # ==================================================
 # Sandra Lorena Ament Velasquez
@@ -40,9 +41,9 @@ import re
 import gffutils
 # ------------------------------------------------------
 
-version = 1.61
+version = 1.70
 versiondisplay = "{0:.2f}".format(version)
-supportedtypes = ["gene", "CDS", "cds", "exon", "noutrs", "similarity", "expressed_sequence_match", "repeat"] # Unlike the CDS, Exons may contain the UTRs; noutrs is from start to stop codon without introns in nuleotides
+supportedtypes = ["gene", "CDS", "cds", "exon", "noutrs", "similarity", "expressed_sequence_match", "repeat", "pseudogene"] # Unlike the CDS, Exons may contain the UTRs; noutrs is from start to stop codon without introns in nuleotides
 
 # ============================
 # Make a nice menu for the user
@@ -83,10 +84,7 @@ except IOError as msg:  # Check that the file exists
 # ------------------------------------------------------
 
 # I often write it in small case, so to catch that
-
-if args.type == "cds":
-	args.type = "CDS"
-
+if args.type == "cds": args.type = "CDS" # it's necessary in capitals for later
 
 # ---------------------------------
 # Make database
@@ -112,11 +110,12 @@ db = gffutils.create_db(data = args.GFF,
 	dbfn = dbfnchoice,
 	# force = True, # force=True overwrite any existing databases.
 	id_spec = id_spec, 
+	verbose = True,
 	merge_strategy = "create_unique") # Add an underscore an integer at the end for each consecutive occurrence of the same ID 
-	# verbose = True,) 
+print() # if verbose = True
 
 # t1 = time.time()
-# db_results = inspect.inspect(db) # Report
+from gffutils import inspect; db_results = inspect.inspect(db) # Report
 # print("\n\nIt took {0:.1f}s to create database".format(t1 - t0))
 # ---------------------------------
 
@@ -172,6 +171,20 @@ if args.specificgene: # Only one specific gene, or string of genes, is required
 # ---------------------------
 ## Retrieve the desire features
 # ---------------------------
+# For pseudogenes
+if args.type == "pseudogene": 
+	for gene in db.features_of_type('pseudogene'):
+		geneID = gene['ID'][0]
+		seq_record = records_dict[gene.chrom] # The chromosome sequence
+		# Get DNA sequence
+		geneseq = getseqbasic(gene, seq_record)
+		# Update the naming of the sequence
+		geneseq = seqnamer(geneID, geneID, geneseq, typeseq = args.type)
+
+		# Print the sequence 
+		SeqIO.write(geneseq, output_handle, "fasta")
+
+
 ### Typical format from a RepeatMasker output
 if args.type == "similarity": 
 	for gene in db.features_of_type('similarity'):
@@ -201,6 +214,7 @@ elif (args.type == "expressed_sequence_match") or (args.type == "repeat"):
 
 ### More canonical genes
 else:
+	childwarning = False
 	for gene in db.features_of_type('gene'):
 		# dir(gene) --> 'astuple', 'attributes', 'bin', 'calc_bin', 'chrom', 'dialect', 'end', 'extra', 'featuretype', 'file_order', 'frame', 'id', 'keep_order', 'score', 'seqid', 'sequence', 'sort_attribute_values', 'source', 'start', 'stop', 'strand'
 		geneID = gene['ID'][0]
@@ -242,9 +256,8 @@ else:
 			child_counter = 1
 			child_concat = Seq('')
 
-			for child in db.children(gene, featuretype=args.type, order_by='start'):
-				
-				parents = db.parents(child, featuretype='mRNA')
+			for child in db.children(gene, featuretype=args.type, order_by='start'): # if the exon has children features like CDS and UTRs.
+				parents = db.parents(child, featuretype='mRNA') # Assuming there are mRNA features in the gtf/gff file
 				childID = child['ID'][0]
 				exonparent = list(parents)[0]['ID'][0]
 					
@@ -290,9 +303,16 @@ else:
 				# cdsparent = list(parents)[0]['ID'][0]
 				## --------------------------------------------
 				
-				cdsparent = geneID
+				## -- Some gffs don't have an ID for their CDS
+				try:
+					childID = child['ID'][0]
+				except:
+					childID = ""
+					childwarning = True # To print later
 
-				childID = child['ID'][0]
+				# --
+
+				cdsparent = geneID
 				strand = child.strand
 				phase = int(child.frame)
 
@@ -392,7 +412,7 @@ else:
 
 				# Finally write the output sequence
 				SeqIO.write(child_concat, output_handle, "fasta")
-
+	if childwarning and args.onlyids and not args.join: print("WARNING: The CDS have no IDs so the sequences will have no names!")
 
 
 # Close all opened files
