@@ -45,7 +45,7 @@ except IOError as msg:  # Check that the file exists
 	parser.error(str(msg)) 
 	parser.print_help()
 
-# This patter is Podospora-specific
+# This patter is Podospora-specific
 pagenepattern = re.compile("(P[a-z]+_[\d]_[\d]*)([\.]?[\d]?)_([\w\.]*)") # Exclusive for Podospora annotation, matching genes like Pc_2_8070.2_PcWa133m
 
 # ------------------------------------------------------
@@ -100,7 +100,7 @@ for ortho in orthgrlist:
 				intersection = set(sppmapdic[sp]) & set(samplesinthisortho)
 
 				if len(intersection) > 0: # There is an intersection, so there is at least one member of the species
-					for sample in intersection: # Check that no sample has more than the requested number of orthologs
+					for sample in intersection: # Check that no sample has more than the requested number of orthologs
 						if (len(orthogroups[ortho][sample]) > args.nugrps): # One sample has more than the requested number
 							nice = False
 						elif len(orthogroups[ortho][sample]) == args.nugrps: # At least one sample has exactly the required number
@@ -111,7 +111,7 @@ for ortho in orthgrlist:
 
 
 				# if set(sppmapdic[sp]).issubset(samplesinthisortho): # Ok, so it has all the species with all the individuals, now filter for real
-				# 	for sample in sppmapdic[sp]: # Check that no sample has more than the requested number of orthologs
+				# 	for sample in sppmapdic[sp]: # Check that no sample has more than the requested number of orthologs
 				# 		if (len(orthogroups[ortho][sample]) > args.nugrps): # One sample has more than the requested number
 				# 			nice = False
 				# 		elif len(orthogroups[ortho][sample]) == args.nugrps:
@@ -126,7 +126,7 @@ for ortho in orthgrlist:
 				# else: # It's not nice because it's missing individuals, but it still has all species so it's "complete"
 				# 	nice = False
 
-			### Useful for debugging
+			### Useful for debugging
 			# if sum(atleastoneguy) == len(species):
 			# 	print(atleastoneguy)
 			# 	print(species)
@@ -135,7 +135,7 @@ for ortho in orthgrlist:
 
 		if not complete: orthoswithmissingdata.append(ortho)
 
-	# ---- We treat each sample as a species ----
+	# ---- We treat each sample as a species ----
 	else:
 		if samplesinthisortho == samples[1:]: 
 			for sample in samples[1:]:
@@ -156,9 +156,9 @@ for ortho in orthgrlist:
 # ------------------------------------------------------
 # Get the cool set of orthologs 
 # ------------------------------------------------------
-## What makes an ortho cool? 
+## What makes an ortho cool? 
 # - It excludes in-paralogs (duplications within species)
-# - It includes groups of paralogs, but not the exact same number per species
+# - It includes groups of paralogs, but not the exact same number per species
 
 if args.cool:	
 	if args.verbose: print("Searching for cool paralogs ...")
@@ -174,12 +174,12 @@ if args.cool:
 		if not args.sppmap:
 			# Does it have all samples?
 			if samplesinthisortho == samples[1:]: # yes
-				# Make a list of all the genes in this orthogroup
+				# Make a list of all the genes in this orthogroup
 				allgenes = []
 				for lista in orthogroups[ortho].values():
 					allgenes.extend(lista)
 
-				# Does it have only one gene per species plus only one of the species has two, i.e. singleton inparalogs?
+				# Does it have only one gene per species plus only one of the species has two, i.e. singleton inparalogs?
 				if len(allgenes) <= (len(samples[1:]) + 1):
 					cool = False
 					if len(allgenes) == (len(samples[1:]) + 1): # Record the singleton
@@ -201,14 +201,14 @@ if args.cool:
 						for sample in intersection: 
 							if (len(orthogroups[ortho][sample]) > 1): # It has paralogs
 								atleastoneguy_cool[species.index(sp)] = True
-					else: # It's missing species
+					else: # It's missing species
 						cool = False
 
 				if sum(atleastoneguy_cool) <= 1: # Then it's a singleton
 					cool = False
 					if sum(atleastoneguy_cool) == 1: singletons.append(ortho)
 
-				# ## Some extra reporting for me but it's not relevant to the program
+				# ## Some extra reporting for me but it's not relevant to the program
 				# elif sum(atleastoneguy_cool) == 2:
 				# 	# Which species have paralogs
 				# 	pairs = [i for (i, v) in zip(species, atleastoneguy_cool) if v]
@@ -218,8 +218,8 @@ if args.cool:
 		if cool: coolorthos.append(ortho) # Append to the final list if cool stayed true
 
 
-	## ---- Deal with the singletons per sample ----
-	# Start a dictionary to count how many singletons each sample has
+	## ---- Deal with the singletons per sample ----
+	# Start a dictionary to count how many singletons each sample has
 	singledic = dict([(sample, 0) for sample in samples[1:]])
 	badannotation_sing = []
 	
@@ -228,7 +228,7 @@ if args.cool:
 			if len(orthogroups[ortho][sample]) > 1:
 				# print(ortho, sample, orthogroups[ortho][sample])
 				
-				# Are they annotation artifacts?
+				# Are they annotation artifacts?
 				matchgene1 = pagenepattern.search(orthogroups[ortho][sample][0])
 				matchgene2 = pagenepattern.search(orthogroups[ortho][sample][1])
 
@@ -238,7 +238,7 @@ if args.cool:
 					else: # If they are not, then keep them
 						singledic[sample] += 1
 						
-				else: # I don't know if they are artifacts, so count them
+				else: # I don't know if they are artifacts, so count them
 					singledic[sample] += 1
 	## ----------------------------------
 
@@ -262,7 +262,7 @@ if (args.sample < float('Inf')) and (totalnumorthos > args.sample):
 # ------------------------------------------------------
 # Print output
 # ------------------------------------------------------
-# Define some printing functions
+# Define some printing functions
 def writeortholist(ortholist, outputname):
 	outfile = open(outputname, 'w')
 	for ortho in ortholist:
@@ -285,7 +285,7 @@ writeortholist(niceorthos, args.outputdir + "/" + "orthogroups_" + str(args.nugr
 # Recover the name of the reference homolog for each orthogroup
 writehomologlist(niceorthos, args.outputdir + "/" + args.ref + "_" + str(args.nugrps) + "n.txt")
 
-# Print the cool orthogroups if pertinent:
+# Print the cool orthogroups if pertinent:
 if args.cool:
 	writeortholist(coolorthos, args.outputdir + "/orthogroups_cool.txt")
 	writehomologlist(coolorthos, args.outputdir + "/" + args.ref + "_cool.txt")
@@ -296,7 +296,7 @@ if args.cool:
 
 	if args.coolplus:
 		for ortho in coolorthos:
-			# Some reporting
+			# Some reporting
 			allgenes = []
 			for lista in orthogroups[ortho].values():
 				allgenes.extend(lista)
