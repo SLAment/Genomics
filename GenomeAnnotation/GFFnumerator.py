@@ -217,7 +217,7 @@ gen()
 
 # 		# Add a line to mark the file with this script
 # 		now = datetime.datetime.now()
-# 		newhead = '# IDs of ' + os.path.basename(args.GFF) + ' renamed with GFFnummerator.py v. ' + str(versiondisplay) + ' on ' + str(now) +  '\n'
+# 		newhead = '# IDs of ' + os.path.basename(args.GFF) + ' renamed with GFFnummerator.py v. ' + str(versiondisplay) + ' on ' + str(now) +  '\n'
 # 		sys.stdout.write(newhead)
 
 # 	elif '#' in line: # Print headers as it is
