@@ -123,7 +123,7 @@ def gen():
 
 	# Add a line to mark the file with this script
 	now = datetime.datetime.now()
-	newhead = '# Original file ' + os.path.basename(args.GFF) + ' modified with GFFnummerator.py v. ' + str(versiondisplay) + ' on ' + str(now) +  '\n'
+	newhead = '# Original file ' + os.path.basename(args.GFF) + ' modified with GFFnummerator.py v. ' + str(versiondisplay) + ' on ' + str(now) +  '\n'
 	sys.stdout.write(newhead)
 
 	# Genes and repeats
