@@ -7,6 +7,8 @@
 # prints to the standard output, and it's designed for python3. It depends on
 # the library gffutils.
 
+# Version 3: Added argument --namestoo
+
 # Sources
 # https://pythonhosted.org/gffutils/autodocs/gffutils.create_db.html
 # http://daler.github.io/gffutils/database-ids.html#merge-strategy
@@ -29,7 +31,7 @@ import gffutils
 import gffutils.inspect as inspect
 # ------------------------------------------------------
 
-version = 2.10
+version = 3.0
 versiondisplay = "{0:.2f}".format(version)
 
 # ============================
