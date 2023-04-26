@@ -29,7 +29,7 @@ import gffutils
 import gffutils.inspect as inspect
 # ------------------------------------------------------
 
-version = 2.1
+version = 2.10
 versiondisplay = "{0:.2f}".format(version)
 
 # ============================
