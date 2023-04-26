@@ -153,6 +153,7 @@ def gen():
 					newidrna = newidthing + "-mRNA" + str(mRNA)
 					mRNA += 1
 					child['ID'] = newidrna
+					if args.namestoo: child['Name'] = newidrna
 
 					print(child)
 
@@ -165,6 +166,7 @@ def gen():
 
 						newidchild = newidrna + '-' + typefea + "{0:01d}".format(typeids[typefea])
 						grandchild['ID'] = newidchild
+						# if args.namestoo: grandchild['Name'] = newidchild # They didn't have a name to beggining with in MAKER
 
 						typeids[typefea] += 1 # Increase the count of the corresponding type for this gene
 						print(grandchild)
@@ -231,11 +233,5 @@ gen()
 # 	elif line not in ['\n', '\r\n']: # Ignore empty lines
 # 		cols = line.rstrip("\n").split("\t")
 # 		print(cols)
-
-
-
-
-
-
 
 
