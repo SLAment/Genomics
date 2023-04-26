@@ -118,11 +118,19 @@ records_dict = SeqIO.to_dict(SeqIO.parse(assemblyopen, "fasta"))
 
 # Query
 query_dict = SeqIO.to_dict(SeqIO.parse(queryopen, "fasta"))
+
+# If the file comes from RepeatModeler or EDTA, the TE names have a format in the style 
+# >TE_00003657_INT#LTR/Copia
+# The # breaks the BLAST database.
+
+
 if args.seqid:
 	# Get all sequences that match that string
-	matching = [seq for seq in query_dict.keys() if args.seqid == seq]
+	matching = [seq for seq in query_dict.keys() if args.seqid in seq]
 	if len(matching) != 0: # Make sure there is a match
-		queryseq = query_dict[args.seqid]
+		# print(matching)
+		queryseq = query_dict[matching[0]]
+		# queryseq = query_dict[args.seqid]
 	else:
 		print("\tNo match for " + args.seqid + "! Exiting ...")
 		sys.exit(1)
