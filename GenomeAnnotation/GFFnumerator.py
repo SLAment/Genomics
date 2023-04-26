@@ -40,6 +40,7 @@ parser = argparse.ArgumentParser(description="* Script to re-name the IDs of the
 # Add options
 parser.add_argument('GFF', help="GFF3 file sorted beforehand")
 parser.add_argument('--sample', '-s', help="String representing sample that gets appended into the gene IDs")
+parser.add_argument('--namestoo', '-n', help="Change the names of the genes too, not only the IDs", default=False, action='store_true')
 parser.add_argument("--printdb", "-p", help="Print the database into a file instead of saving it in memory", default=False, action='store_true')
 parser.add_argument('--version', '-v', action='version', version='%(prog)s ' + versiondisplay)
 
@@ -133,6 +134,8 @@ def gen():
 	for thing in focalfeatures:
 		newidthing = getnewID(thing.id)
 		thing['ID'] = newidthing
+
+		if args.namestoo: thing['Name'] = newidthing
 
 		print() # I like to have space to see the individual items
 		print(thing)
