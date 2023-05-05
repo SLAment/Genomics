@@ -113,7 +113,7 @@ norepeats = len(repeats)
 allIDs = [feature.id for feature in db.all_features() if feature.featuretype in ["gene", "repeat"]]
 
 ## Make new IDs for the genes and the repeats
-newIDs = [args.sample + "_" + "{0:06d}".format(n) for n in range(0, nogenes + norepeats + 1, args.step)]
+newIDs = [args.sample + "_" + "{0:06d}".format(n) for n in range(args.step, nogenes + norepeats + 1, args.step)]
 
 # ---------------------------
 ### Change IDs
