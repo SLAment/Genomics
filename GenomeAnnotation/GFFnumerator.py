@@ -31,7 +31,7 @@ import gffutils
 import gffutils.inspect as inspect
 # ------------------------------------------------------
 
-version = 3.0
+version = 3.01
 versiondisplay = "{0:.2f}".format(version)
 
 # ============================
@@ -119,9 +119,12 @@ def getnewID(id):
 
 def gen():
 	## Get the original headers
+	headcount = 1
 	for line in GFFopen:
+		if (headcount == 1) and ("##gff-version" not in line): sys.stdout.write("##gff-version 3\n")
 		if line.startswith( '#' ):
 			sys.stdout.write(line)
+		headcount += 1
 	GFFopen.close()
 
 	# Add a line to mark the file with this script
