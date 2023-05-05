@@ -7,6 +7,12 @@
 # prints to the standard output, and it's designed for python3. It depends on
 # the library gffutils.
 
+# Version 4: Changed naming scheme to match the NCBI specs better:
+# - The IDs should have a "locus_tag", so the IDs look like "tag_NNNNN", where
+#   NNNNN stands for numbers. The tag itself should not contain `-_*` characters 
+# - Instead of "mRNA" for transcripts, the ID has have "T"
+# - Added option --step to change the numbering in IDs. They now start at 0 instead of 1
+
 # Version 3: Added argument --namestoo
 
 # Sources
@@ -31,7 +37,7 @@ import gffutils
 import gffutils.inspect as inspect
 # ------------------------------------------------------
 
-version = 3.01
+version = 4.00
 versiondisplay = "{0:.2f}".format(version)
 
 # ============================
@@ -40,11 +46,15 @@ versiondisplay = "{0:.2f}".format(version)
 parser = argparse.ArgumentParser(description="* Script to re-name the IDs of the genes and features of a GFF3 file *")  # Create the object using class argparse
 
 # Add options
-parser.add_argument('GFF', help="GFF3 file sorted beforehand")
-parser.add_argument('--sample', '-s', help="String representing sample that gets appended into the gene IDs")
+parser.add_argument('GFF', help="Sorted GFF3 file")
+parser.add_argument('--sample', '-s', help="String representing sample that gets appended into the gene IDs (or the locus_tag of NCBI). Default: 'FUN'", default='FUN')
 parser.add_argument('--namestoo', '-n', help="Change the names of the genes too, not only the IDs", default=False, action='store_true')
 parser.add_argument("--printdb", "-p", help="Print the database into a file instead of saving it in memory", default=False, action='store_true')
 parser.add_argument('--version', '-v', action='version', version='%(prog)s ' + versiondisplay)
+
+# Decoration
+parser.add_argument('--step', '-t', help="Interval between gene IDs. NCBI suggests a step of 10 in case future annotation updates find new genes in between existing ones. Default: 1", default='1', type=int)
+
 
 try:
 	# ArgumentParser parses arguments through the parse_args() method You can
@@ -103,10 +113,7 @@ norepeats = len(repeats)
 allIDs = [feature.id for feature in db.all_features() if feature.featuretype in ["gene", "repeat"]]
 
 ## Make new IDs for the genes and the repeats
-if args.sample is not None:
-	newIDs = [args.sample + "{0:05d}".format(n) for n in range(1, nogenes + norepeats + 1)]
-else:
-	newIDs = ["feature.{0:05d}".format(n) for n in range(1, nogenes + norepeats + 1)]
+newIDs = [args.sample + "_" + "{0:06d}".format(n) for n in range(0, nogenes + norepeats + 1, args.step)]
 
 # ---------------------------
 ### Change IDs
@@ -153,7 +160,7 @@ def gen():
 					child['Parent'] = newidthing
 
 					# make a new ID for the mRNA
-					newidrna = newidthing + "-mRNA" + str(mRNA)
+					newidrna = newidthing + "-T" + str(mRNA)
 					mRNA += 1
 					child['ID'] = newidrna
 					if args.namestoo: child['Name'] = newidrna
