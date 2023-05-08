@@ -37,7 +37,7 @@ import gffutils
 import gffutils.inspect as inspect
 # ------------------------------------------------------
 
-version = 4.00
+version = 4.01
 versiondisplay = "{0:.2f}".format(version)
 
 # ============================
@@ -173,8 +173,11 @@ def gen():
 						grandchild['Parent'] = newidrna # TODO Add something here, a conditional, in case there are multiple parents
 
 						typefea = grandchild.featuretype # What type are we dealing with?
+						if typefea == 'five_prime_UTR': typename = '5pUTR'
+						elif typefea == 'three_prime_UTR': typename = '3pUTR'
+						else: typename = typefea
 
-						newidchild = newidrna + '-' + typefea + "{0:01d}".format(typeids[typefea])
+						newidchild = newidrna + '-' + typename + "{0:01d}".format(typeids[typefea])
 						grandchild['ID'] = newidchild
 						# if args.namestoo: grandchild['Name'] = newidchild # They didn't have a name to beggining with in MAKER
 
