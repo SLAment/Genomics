@@ -37,7 +37,7 @@ import gffutils
 import gffutils.inspect as inspect
 # ------------------------------------------------------
 
-version = 4.01
+version = 4.02
 versiondisplay = "{0:.2f}".format(version)
 
 # ============================
@@ -144,6 +144,10 @@ def gen():
 
 	# Actual GFF
 	for thing in focalfeatures:
+		if args.namestoo: # The annotation of trnascan is in the name
+			if 'trnascan' in thing['ID'][0]:
+				thing.attributes['Note'] = thing['Name']
+
 		newidthing = getnewID(thing.id)
 		thing['ID'] = newidthing
 
