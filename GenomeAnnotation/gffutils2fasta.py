@@ -297,7 +297,6 @@ else:
 			child_concat = Seq('')
 
 			for child in db.children(gene, featuretype=args.type, order_by='start'):
-
 				## --- Get the cdsparent name from the mRNA ---
 				# parents = db.parents(child, featuretype='mRNA') # Might be useful for different transcripts, but I don't encounter that problem
 				# cdsparent = list(parents)[0]['ID'][0]
