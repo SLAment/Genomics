@@ -12,6 +12,7 @@
 #   NNNNN stands for numbers. The tag itself should not contain `-_*` characters 
 # - Instead of "mRNA" for transcripts, the ID has have "T"
 # - Added option --step to change the numbering in IDs. They now start at 0 instead of 1
+# - Creates a tRNA feature for the tRNAscan annotation
 
 # Version 3: Added argument --namestoo
 
@@ -35,9 +36,10 @@ import argparse  # For the fancy options
 import datetime
 import gffutils
 import gffutils.inspect as inspect
+import re
 # ------------------------------------------------------
 
-version = 4.02
+version = 4.03
 versiondisplay = "{0:.2f}".format(version)
 
 # ============================
@@ -144,9 +146,14 @@ def gen():
 
 	# Actual GFF
 	for thing in focalfeatures:
-		if args.namestoo: # The annotation of trnascan is in the name
-			if 'trnascan' in thing['ID'][0]:
-				thing.attributes['Note'] = thing['Name']
+		# The annotation of trnascan is in the name
+		trnastatus = False
+		if 'trnascan' in thing['ID'][0]: # Produced by tRNAscan, so a specific format is expected	
+			trnascanpattern = re.compile('trnascan-[\w]*-noncoding-([\w]*)_([\w]{3})-[\w\d\.-]*')
+			matchy = trnascanpattern.search(thing['ID'][0])
+			if matchy:
+				trnastatus = True
+				thing.attributes['Note'] = f"tRNA-{matchy.group(1)}_anti-codon_{matchy.group(2)}"
 
 		newidthing = getnewID(thing.id)
 		thing['ID'] = newidthing
@@ -157,7 +164,23 @@ def gen():
 		print(thing)
 
 		if thing.featuretype == "gene":
+			# The tRNAscan annotation has only the gene feature, but not children
+			if trnastatus:
+				newchild = thing
+				newchild.source = "tRNAscan-SE"
+				newchild.featuretype = "tRNA"
+				newchild['ID'] = newidthing + '-tRNA'
+				newchild['Parent'] = newidthing
+				
+				if matchy.group(2) == "NNN":
+					newchild.attributes['product'] = f"tRNA-Xxx" # https://www.ncbi.nlm.nih.gov/genbank/eukaryotic_genome_submission_annotation/
+					newchild.attributes['Note'] = f"probable {matchy.group(1)} tRNA"
+				else:
+					newchild.attributes['product'] = f"tRNA-{matchy.group(1)}"
+					newchild.attributes['Note'] = f"probable {matchy.group(1)} tRNA: anti-codon {matchy.group(2)}"
+				print(newchild)
 
+			# Normal coding genes
 			mRNA = 1
 			for child in list(db.children(thing)):	
 				if child.featuretype == "mRNA":
@@ -168,7 +191,7 @@ def gen():
 					mRNA += 1
 					child['ID'] = newidrna
 					if args.namestoo: child['Name'] = newidrna
-
+		
 					print(child)
 
 					# Update all the features that depend on the mRNA, assuming each feature has a SINGLE parent
