@@ -39,7 +39,7 @@ import gffutils.inspect as inspect
 import re
 # ------------------------------------------------------
 
-version = 4.03
+version = 4.04
 versiondisplay = "{0:.2f}".format(version)
 
 # ============================
