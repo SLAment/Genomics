@@ -41,7 +41,7 @@ import re
 import gffutils
 # ------------------------------------------------------
 
-version = 1.70
+version = 1.80
 versiondisplay = "{0:.2f}".format(version)
 supportedtypes = ["gene", "CDS", "cds", "exon", "noutrs", "similarity", "expressed_sequence_match", "repeat", "pseudogene"] # Unlike the CDS, Exons may contain the UTRs; noutrs is from start to stop codon without introns in nuleotides
 
@@ -61,6 +61,7 @@ parser.add_argument("--extrabp", "-e", help="Extra base pairs on the side (only 
 
 parser.add_argument("--onlyids", "-n", help="Only keep the name of the gene ID in the output", default=False, action='store_true')
 parser.add_argument("--onlynames", "-N", help="Only keep the name of the gene in the output", default=False, action='store_true')
+parser.add_argument("--mRNAids", "-r", help="Use the mRNA ID instead of the gene ID in the output (only for CDS)", default=False, action='store_true')
 
 # # parser.add_argument("--appendtoname", "-a", help="Append string to the sequence names", default='') # Maybe one day
 # # parser.add_argument("--othertype", "-t", help="The feature you want to extract, with your own name", default=NULL) # One day
@@ -297,18 +298,18 @@ else:
 			child_concat = Seq('')
 
 			for child in db.children(gene, featuretype=args.type, order_by='start'):
-				## --- Get the cdsparent name from the mRNA ---
-				# parents = db.parents(child, featuretype='mRNA') # Might be useful for different transcripts, but I don't encounter that problem
-				# cdsparent = list(parents)[0]['ID'][0]
-				## --------------------------------------------
-				
-				## -- Some gffs don't have an ID for their CDS
-				try:
-					childID = child['ID'][0]
-				except:
-					childID = ""
-					childwarning = True # To print later
+				# --- Get the cdsparent name from the mRNA ---
+				if args.mRNAids:
+					parents = db.parents(child, featuretype='mRNA')
+					childID = list(parents)[0]['ID'][0] # Used if CDS are not joined
 
+				else:
+					## -- Some gffs don't have an ID for their CDS
+					try:
+						childID = child['ID'][0]
+					except:
+						childID = ""
+						childwarning = True # To print later
 				# --
 
 				cdsparent = geneID
@@ -404,7 +405,10 @@ else:
 							child_concat.id = seq_record.id
 							child_concat.description = seq_record.description
 
-					child_concat = seqnamer(geneID, genename, child_concat, typeseq = args.type) # Update the naming of the sequence
+					if args.mRNAids:
+						child_concat = seqnamer(childID, genename, child_concat, typeseq = args.type) # Update the naming of the sequence
+					else:
+						child_concat = seqnamer(geneID, genename, child_concat, typeseq = args.type) # Update the naming of the sequence
 
 				except:
 					if args.verbose: print("The gene " + gene['ID'][0] + " " + gene['Name'][0] + " is weird. Maybe it doesn't have a CDS? Skipped.")
