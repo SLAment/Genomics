@@ -62,6 +62,7 @@ parser.add_argument("--extrabp", "-e", help="Extra base pairs on the side (only 
 parser.add_argument("--onlyids", "-n", help="Only keep the name of the gene ID in the output", default=False, action='store_true')
 parser.add_argument("--onlynames", "-N", help="Only keep the name of the gene in the output", default=False, action='store_true')
 parser.add_argument("--mRNAids", "-r", help="Use the mRNA ID instead of the gene ID in the output (only for CDS)", default=False, action='store_true')
+parser.add_argument("--code", "-c", help="Genetic code used for traslation (--proteinon) as an NCBI number. Default: 1", default=1, type=int)
 
 # # parser.add_argument("--appendtoname", "-a", help="Append string to the sequence names", default='') # Maybe one day
 # # parser.add_argument("--othertype", "-t", help="The feature you want to extract, with your own name", default=NULL) # One day
@@ -335,7 +336,7 @@ else:
 
 						# If protein sequences are required
 						if args.proteinon:
-							cdsseq.seq = cdsseq.seq.translate()
+							cdsseq.seq = cdsseq.seq.translate(table = args.code)
 
 					elif strand == '-': 
 						raw_start = child.start - 1
@@ -349,7 +350,7 @@ else:
 							cdsseq = seq_record[start:stop].reverse_complement()
 							cdsseq.id = seq_record.id
 							cdsseq.description = seq_record.description
-							cdsseq.seq = cdsseq.seq.translate()
+							cdsseq.seq = cdsseq.seq.translate(table = args.code)
 						else:
 							cdsseq = seq_record[start:stop]
 
@@ -393,13 +394,13 @@ else:
 					if args.proteinon:
 
 						if strand == '+':	
-							cdsseq_concat = child_concat.seq.translate()
+							cdsseq_concat = child_concat.seq.translate(table = args.code)
 							child_concat.seq = cdsseq_concat
 						elif strand == '-':
 							# Use last phase to correct the reading frame in the minus strand for this gene (and reverse complement it)
 							child_concat = child_concat[:len(child_concat) - phase].reverse_complement()
 							# Translate to protein
-							cdsseq_concat = child_concat.seq.translate()
+							cdsseq_concat = child_concat.seq.translate(table = args.code)
 							child_concat.seq = cdsseq_concat
 							# Edit Seq object to have the same names again
 							child_concat.id = seq_record.id
