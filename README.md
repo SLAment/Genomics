@@ -46,6 +46,15 @@ The scripts are made to either parse the BLAST output, filter it or modify it, o
 
 - `gtfRM2gff.py` - Script to transform the output of RepeatMasker (obtained with option `-gff` in RepeatMasker, which has a misleading name because it's a gtf) into a normal gff3. It also appends a color attribute to normal repeats (`-c`) and to simple repeats (`-s`) to be displayed in [The Integrative Genomics Viewer (IGV)](http://software.broadinstitute.org/software/igv/). 
 - `totalcovergff.py` - Script to obtained the merged coordinates of all models in gff file (eg. from RepeatMasker either the gtf or gff produced with `gtfRM2gff.py`). Basically it produces a bed file from the gff file with overlapping features merged. If only the gff is given, then it will collapse all the repeats into non-overlapping intervals. If an associated fasta file is also provided (`--fasta`), then it will calculate the total coverage of the contigs within that fasta annotated in the gff. Notice that the "bed" file produced is in the base of the input file (base 1 with gtf or gff files).
+- `MFannot4ncbi.oy` - The tbl output of [MFannot](https://www.frontiersin.org/articles/10.3389/fpls.2023.1222186/full) is too bare. This scripts attempts to make it closer to the desired tbl for [`table2asn`](https://www.ncbi.nlm.nih.gov/genbank/table2asn/), the NCBI script that produces sqn files for genome submission.
+
+I ran it as
+
+	% ./MFannot4ncbi.py mfannot_output.fasta.new.tbl MyMtContig.fa -l XXXX -s 10 -n 114111 > MyMtContig.tbl
+
+Where XXXX is the NCBI locus_tag, and 114111 is a number I chose to start the gene codes for all the genes in the mitochondrial contig. This could be 1, or whatever you want, but if you already have nuclear genome contigs with numbers, you can continue those numbers for your mitochondrial contig.
+
+- `tbl2gff.py` - Experimental little script to transform a tbl file, like the one produced by `MFannot4ncbi.py`, into a gff3 file. At the moment the phase of the CDS mightbe wrong (specially the ones in the - sense).
 
 ## Miscellaneous
 
