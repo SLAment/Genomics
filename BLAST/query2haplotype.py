@@ -8,6 +8,7 @@
 # genome. If the --haplo option is used, then it searches for a haplotype
 # instead.
 
+# version 1.6 - added the --makegff option and changed the behaviour of --temp to not include the tailing /
 # version 1.5 - added identity argument, and changed the -i flag to -I
 # version 1.3 - "from Bio.Alphabet import generic_dna" was removed from BioPython >1.76. See https://biopython.org/wiki/Alphabet
 # ==================================================
@@ -25,7 +26,7 @@ import subprocess # For the database
 from shutil import rmtree # For removing directories
 import argparse # For the fancy options
 # ------------------------------------------------------
-version = 1.51
+version = 1.6
 versiondisplay = "{0:.2f}".format(version)
 
 # Make a nice menu for the user
@@ -44,6 +45,9 @@ parser.add_argument("--extrabp", "-f", help="Extra base pairs cut next to the st
 parser.add_argument("--minsize", "-s", help="Minimum size of BLAST hit to be considered (default 0 bp)", type=int, default=0)
 parser.add_argument("--vicinity", "-c", help="Max distance between 5 and 3 end hits to form a haplotype (default 10000 bp)", type=int, default=10000)
 parser.add_argument("--minhaplo", "-m", help="Minimum size of haplotype size (default 0 bp)", type=int, default=0)
+# Other useful things
+# parser.add_argument("--makebed", "-B", help="Print a BED file with the output hits too", default=False, action='store_true')
+parser.add_argument("--makegff", "-g", help="Print a BED file with the output hits too", default=False, action='store_true')
 
 # Make a mutualy-exclusive group
 selfgroup = parser.add_mutually_exclusive_group()
@@ -54,7 +58,7 @@ selfgroup.add_argument("--noself", "-n", help="Attempt to remove BLAST selfhits 
 parser.add_argument("--blastab", "-b", help="The query is not a fasta, but a BLAST tab file to be used directly instead of doing the whole BLAST", default=False, action='store_true')
 parser.add_argument("--seqid", "-I", help="Name of query gene to be extracted from the input multifasta QUERY file. eg. Pa_6_4990", type=str)
 parser.add_argument("--threads", "-t", help="Number of threads for BLAST. Default: 1", default="1", type=int) # nargs='+' All, and at least one, argument
-parser.add_argument('--temp', '-u', help="Path and directory where temporary files are written in style path/to/dir/. Default: working directory", default='./')
+parser.add_argument('--temp', '-u', help="Path and directory where temporary files are written in style path/to/dir. Default: working directory", default='.')
 parser.add_argument('--clean', '-C', help="Erase the temporary directories and files when finish", default=False, action='store_true')
 parser.add_argument('--version', "-v", action='version', version='%(prog)s ' + versiondisplay)
 
@@ -145,20 +149,20 @@ if not args.blastab:
 	# Define the names of the databases
 	nameref = namebase(args.assembly)
 	nameqry = namebase(args.query)
-	databasename = args.temp + nameref + '_db/' + nameref + '_db'
+	databasename = args.temp + "/" + nameref + '_db/' + nameref + '_db'
 
 	# Make the local BLAST databases
-	if not os.path.isdir(args.temp + nameref + '_db/'): # If it exist already, don't bother
+	if not os.path.isdir(args.temp + "/" + nameref + '_db/'): # If it exist already, don't bother
 		makeBLASTdb(args.assembly, databasename, 'nucl')
 
 	# BLAST
 	if args.seqid: # Only one sequence
-		outputhits = args.temp + queryseq.id + "VS" + nameref + "-" + "hits.tab"
+		outputhits = args.temp + "/" + queryseq.id + "VS" + nameref + "-" + "hits.tab"
 		query_string = '>' + queryseq.id + '\n' + str(queryseq.seq)
 		blast_command = NcbiblastnCommandline(cmd='blastn', out=outputhits, outfmt=6, db=databasename, evalue=args.evalue, perc_identity=args.identity, num_threads=args.threads, task=args.task)
 		stdout, stderr = blast_command(stdin=query_string)
 	else: # Multifasta
-		outputhits = args.temp + nameqry + "VS" + nameref + "-" + "hits.tab"
+		outputhits = args.temp + "/" + nameqry + "VS" + nameref + "-" + "hits.tab"
 		blast_command = NcbiblastnCommandline(query=args.query, cmd='blastn', out=outputhits, outfmt=6, db=databasename, evalue=args.evalue, perc_identity=args.identity, num_threads=args.threads, task=args.task)
 		stdout, stderr = blast_command()
 
@@ -170,6 +174,11 @@ else:
 # -----------------------------------
 # Get haplotype
 # -----------------------------------
+
+if args.makegff: 
+	gfffile = open(args.temp + "/" + nameref + '_vs_' + nameqry + '.gff3', 'w')
+	gfffile.write("##gff-version 3\n")
+
 
 if args.haplo: # We are looking for entire haplotypes and the blast is only the edges
 	chunks = {}
@@ -195,12 +204,12 @@ if args.haplo: # We are looking for entire haplotypes and the blast is only the 
 
 	# Slice the hits plus some extra bases on the sides
 	slices = []
-
+	chunkcount = 0 # only useful if args.makegff is active
 	for ctg in chunks.keys(): # For each contig hit
 		hitseq = records_dict[ctg] 	# The actual sequence hit by the query
 		cleanchunks = remove_overlap(chunks[ctg])
 		for start,end in remove_overlap(chunks[ctg]): # Reduce the list to only the non-overlapping ranges
-
+			chunkcount += 1
 			if (end - start) >= args.minhaplo:
 				# Avoid negative numbers
 				if start - args.extrabp < 0:
@@ -232,6 +241,9 @@ if args.haplo: # We are looking for entire haplotypes and the blast is only the 
 				slice.description = ''
 				# Save it in the list
 				slices.append(slice)
+
+				if args.makegff:
+					gfffile.write(f"{hitseq.id}\tBLASTn\tsimilarity\t{start_final + 1}\t{end_final}\t.\t.\t.\tID=haplo{chunkcount};color=#000000;\n")
 
 	SeqIO.write(slices, sys.stdout, "fasta")
 
@@ -266,6 +278,9 @@ else: # The BLAST hits themselves are the haplotypes
 			# Save it in the list
 			slices.append(slice)
 
+			if args.makegff:
+				gfffile.write(f"{hitseq.id}\tBLASTn\tsimilarity\t{start_final + 1}\t{end_final}\t.\t.\t.\tID={hit[0]};Name={hit[0]};eval={hit[10]};identity={hit[2]};length={len(slice)};color=#000000;\n")
+
 	SeqIO.write(slices, sys.stdout, "fasta")
 
 # ------------------------------------------------------
@@ -273,6 +288,6 @@ else: # The BLAST hits themselves are the haplotypes
 # ------------------------------------------------------
 if args.clean:
 	# Remove BLAST databases	
-	rmtree(args.temp + nameref + '_db')
+	rmtree(args.temp + "/" + nameref + '_db')
 	# Remove the BLAST results
 	os.remove(outputhits)
