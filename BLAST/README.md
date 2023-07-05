@@ -14,13 +14,15 @@ The script `query2hitseq.py` can also do that (it's an older version), but the r
 
 Notice that if the query fasta file contains several sequences, these will be considered as possible 5' or 3' end of the haplotype. This is very convenient when you want a particular locus of your favorite genome and you know the flanking genes. You can take the sequence of the left (5') and right (3') genes of your locus, put them in a fasta file and use it as input query.
 
-It's important not to confuse `--vicinity` with `--minhaplo`. The latter simply filters out the output sequences that are smaller than the value given to `--minhaplo` (default 0 bp). That is useful if you only want the big haplotypes.
+It's important not to confuse `--vicinity` with `--minhaplo`. The latter simply filters out the output sequences that are smaller than the value given to `--minhaplo` (default 0 bp). That is useful if you only want the big haplotypes. The `--vicinity` instead puts a limit to how far the flanking sequences can be from each other to be considered a haplotype.
 
 You can also ask for extra bp to both sides of the haplotype with `--extrabp`. This is particularly useful when you are doing manual curation of transposable elements and you are looking for the edges of the elements.
 
     $ python query2haplotype.py path/to/assembly.fasta path/to/queryfile.fasta --haplo --extrabp 2000 > hits.fasta
 
 That will add 2000 bp to the right and left of the retrieved hits.
+
+A handy option is `--makegff` (from version 1.6). It will produce a simple gff3 file of its output, ideal to be visualized in for example IGV. 
 
 For additional options see:
 
