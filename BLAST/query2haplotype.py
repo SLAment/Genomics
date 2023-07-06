@@ -27,7 +27,7 @@ import subprocess # For the database
 from shutil import rmtree # For removing directories
 import argparse # For the fancy options
 # ------------------------------------------------------
-version = 1.7
+version = 1.71g
 versiondisplay = "{0:.2f}".format(version)
 
 # Make a nice menu for the user
@@ -47,13 +47,12 @@ parser.add_argument("--minsize", "-s", help="Minimum size of BLAST hit to be con
 parser.add_argument("--vicinity", "-c", help="Max distance between 5 and 3 end hits to form a haplotype (default 10000 bp)", type=int, default=10000)
 parser.add_argument("--minhaplo", "-m", help="Minimum size of haplotype size (default 0 bp)", type=int, default=0)
 # Other useful things
-# parser.add_argument("--makebed", "-B", help="Print a BED file with the output hits too", default=False, action='store_true')
-parser.add_argument("--makegff", "-g", help="Print a BED file with the output hits too", default=False, action='store_true')
+parser.add_argument("--makegff", "-g", help="Print a simple gff3 file with the output hits too", default=False, action='store_true')
 
 # Make a mutualy-exclusive group
 selfgroup = parser.add_mutually_exclusive_group()
-selfgroup.add_argument("--self", "-N", help="Attempt to report only the hits that are identical to query (won't work with if -f is used)", default=False, action='store_true')
-selfgroup.add_argument("--noself", "-n", help="Attempt to remove BLAST selfhits (won't work with if -f is used)", default=False, action='store_true')
+selfgroup.add_argument("--self", "-N", help="Attempt to report only the hits that are identical to query (won't work if -f is used)", default=False, action='store_true')
+selfgroup.add_argument("--noself", "-n", help="Attempt to remove BLAST selfhits (won't work if -f is used)", default=False, action='store_true')
 
 # Extras
 parser.add_argument("--blastab", "-b", help="The query is not a fasta, but a BLAST tab file to be used directly instead of doing the whole BLAST", default=False, action='store_true')
