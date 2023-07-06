@@ -23,6 +23,7 @@
 
 
 ## VERSION notes
+# version 1.9 - Now using --onlyids and --onlynames at the same time leads to a combined name
 # version 1.7 - Made it more tolerable of CDS without IDs and added an option to extract pseudogenes
 # version 1.5 - "from Bio.Alphabet import generic_dna" was removed from BioPython >1.76. See https://biopython.org/wiki/Alphabet
 # ==================================================
@@ -41,7 +42,7 @@ import re
 import gffutils
 # ------------------------------------------------------
 
-version = 1.80
+version = 1.90
 versiondisplay = "{0:.2f}".format(version)
 supportedtypes = ["gene", "CDS", "cds", "exon", "noutrs", "similarity", "expressed_sequence_match", "repeat", "pseudogene"] # Unlike the CDS, Exons may contain the UTRs; noutrs is from start to stop codon without introns in nuleotides
 
@@ -154,7 +155,10 @@ def getseqbasic(dbobject, seq_record, extrabp = args.extrabp):
 
 def seqnamer(geneID, genename, geneseq, typeseq = args.type): #, onlyids = args.onlyids, onlynames = args.onlynames):
 	""" Rename sequence so it's not the chromosome name """
-	if args.onlyids: # Name of the output
+	if args.onlyids and args.onlynames: # both
+		geneseq.id = geneID + "_" + genename
+		geneseq.description = ''
+	elif args.onlyids: # Name of the output
 		geneseq.id = geneID
 		geneseq.description = ''
 	elif args.onlynames: # Name of the output
@@ -274,7 +278,10 @@ else:
 					exonseq = seq_record[start:stop] # Last letter will be excluded
 
 					# The naming is a bit different than the normal, so I cannot use the function seqnamer()
-					if args.onlyids: # Name of the output
+					if args.onlyids and args.onlynames:
+						exonseq.id = childID + "_" + genename + '_exon.' + str(child_counter)
+						exonseq.description = ''
+					elif args.onlyids: # Name of the output
 						exonseq.id = childID
 						exonseq.description = ''
 					elif args.onlynames: # Name of the output
@@ -354,7 +361,10 @@ else:
 						else:
 							cdsseq = seq_record[start:stop]
 
-					if args.onlyids: # Name of the output
+					if args.onlyids and args.onlynames:
+						cdsseq.id = childID + "_" + genename + '_CDS.' + str(child_counter)
+						cdsseq.description = ''
+					elif args.onlyids: # Name of the output
 						cdsseq.id = childID
 						cdsseq.description = ''
 					elif args.onlynames: # Name of the output
@@ -386,7 +396,7 @@ else:
 					# Get DNA seq
 					child_concat += seq_record[start:stop] # Last letter will be excluded
 
-					# SeqIO.write(child_concat, output_handle, "fasta")
+					# SeqIO.write(child_concat, output_handle, "fasta") # this will be printed below instead
 
 
 			if args.join and args.type == 'CDS': # **hey** Print into the file if the output is to be joined
