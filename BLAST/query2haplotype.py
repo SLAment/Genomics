@@ -52,8 +52,8 @@ parser.add_argument("--makegff", "-g", help="Print a BED file with the output hi
 
 # Make a mutualy-exclusive group
 selfgroup = parser.add_mutually_exclusive_group()
-selfgroup.add_argument("--self", "-N", help="Attempt to report only the hits that are identical to query (only with --haplo)", default=False, action='store_true')
-selfgroup.add_argument("--noself", "-n", help="Attempt to remove BLAST selfhits (only with --haplo)", default=False, action='store_true')
+selfgroup.add_argument("--self", "-N", help="Attempt to report only the hits that are identical to query (won't work with if -f is used)", default=False, action='store_true')
+selfgroup.add_argument("--noself", "-n", help="Attempt to remove BLAST selfhits (won't work with if -f is used)", default=False, action='store_true')
 
 # Extras
 parser.add_argument("--blastab", "-b", help="The query is not a fasta, but a BLAST tab file to be used directly instead of doing the whole BLAST", default=False, action='store_true')
