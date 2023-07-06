@@ -27,7 +27,7 @@ import subprocess # For the database
 from shutil import rmtree # For removing directories
 import argparse # For the fancy options
 # ------------------------------------------------------
-version = 1.71g
+version = 1.71
 versiondisplay = "{0:.2f}".format(version)
 
 # Make a nice menu for the user
