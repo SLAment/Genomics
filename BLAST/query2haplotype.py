@@ -207,9 +207,8 @@ if args.haplo: # We are looking for entire haplotypes and the blast is only the 
 	chunkcount = 0 # only useful if args.makegff is active
 	for ctg in chunks.keys(): # For each contig hit
 		hitseq = records_dict[ctg] 	# The actual sequence hit by the query
-		cleanchunks = remove_overlap(chunks[ctg])
 		for start,end in remove_overlap(chunks[ctg]): # Reduce the list to only the non-overlapping ranges
-			chunkcount += 1
+			chunkcount += 1 # only useful if args.makegff is active
 			if (end - start) >= args.minhaplo:
 				# Avoid negative numbers
 				if start - args.extrabp < 0:
@@ -222,9 +221,6 @@ if args.haplo: # We are looking for entire haplotypes and the blast is only the 
 					end_final = len(hitseq.seq)
 				else:
 					end_final = end + args.extrabp
-
-				# if "MarorPlavaka-3" not in hitseq.id: 
-				# 	continue
 
 				if args.noself: # The name of the query and the subject is the same, and the whole of the query sequence
 					if (hitseq.id == ctg) and (start == 1) and (end == len(hitseq.seq)): 
