@@ -8,6 +8,7 @@
 # genome. If the --haplo option is used, then it searches for a haplotype
 # instead.
 
+# version 1.7 - changed the behavior of --self and --noself to check if the output matches the queries
 # version 1.6 - added the --makegff option and changed the behaviour of --temp to not include the tailing /
 # version 1.5 - added identity argument, and changed the -i flag to -I
 # version 1.3 - "from Bio.Alphabet import generic_dna" was removed from BioPython >1.76. See https://biopython.org/wiki/Alphabet
@@ -26,7 +27,7 @@ import subprocess # For the database
 from shutil import rmtree # For removing directories
 import argparse # For the fancy options
 # ------------------------------------------------------
-version = 1.6
+version = 1.7
 versiondisplay = "{0:.2f}".format(version)
 
 # Make a nice menu for the user
@@ -222,12 +223,13 @@ if args.haplo: # We are looking for entire haplotypes and the blast is only the 
 				else:
 					end_final = end + args.extrabp
 
-				if args.noself: # The name of the query and the subject is the same, and the whole of the query sequence
-					if (hitseq.id == ctg) and (start == 1) and (end == len(hitseq.seq)): 
-						continue # It's a selfhit, so ignore
-				elif args.self:
-					if (hitseq.id != ctg) or (start != 1) or (end != len(hitseq.seq)): 
-						continue # It's not a selfhit, so ignore
+				# # Old behaviour
+				# if args.noself: # The name of the query and the subject is the same, and the whole of the query sequence
+				# 	if (hitseq.id == ctg) and (start == 1) and (end == len(hitseq.seq)): 
+				# 		continue # It's a selfhit, so ignore
+				# elif args.self:
+				# 	if (hitseq.id != ctg) or (start != 1) or (end != len(hitseq.seq)): 
+				# 		continue # It's not a selfhit, so ignore
 
 				# Slice it 
 				slice = hitseq[start_final:end_final]
@@ -240,8 +242,7 @@ if args.haplo: # We are looking for entire haplotypes and the blast is only the 
 
 				if args.makegff:
 					gfffile.write(f"{hitseq.id}\tBLASTn\tsimilarity\t{start_final + 1}\t{end_final}\t.\t.\t.\tID=haplo{chunkcount};color=#000000;\n")
-
-	SeqIO.write(slices, sys.stdout, "fasta")
+					# query_dict
 
 else: # The BLAST hits themselves are the haplotypes 
 	# Slice the hits plus some extra bases on the sides
@@ -277,6 +278,17 @@ else: # The BLAST hits themselves are the haplotypes
 			if args.makegff:
 				gfffile.write(f"{hitseq.id}\tBLASTn\tsimilarity\t{start_final + 1}\t{end_final}\t.\t.\t.\tID={hit[0]};Name={hit[0]};eval={hit[10]};identity={hit[2]};length={len(slice)};color=#000000;\n")
 
+if args.noself: # Print only sequences that are different from the queries
+	for seq in query_dict:
+		for thisslice in slices:
+			if thisslice.seq != query_dict[seq].seq: 
+				SeqIO.write(thisslice, sys.stdout, "fasta")
+elif args.self: # Print only sequences that are 100% identical to the queries
+	for seq in query_dict:
+		for thisslice in slices:
+			if thisslice.seq == query_dict[seq].seq:
+				SeqIO.write(thisslice, sys.stdout, "fasta")
+else:
 	SeqIO.write(slices, sys.stdout, "fasta")
 
 # ------------------------------------------------------
