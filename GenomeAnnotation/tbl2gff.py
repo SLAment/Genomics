@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-# ================== tbl2bed =================
+# ================== tbl2gff =================
 
 # Transform the tbl into a gff3 file so I can see it in IGV
 
@@ -23,7 +23,7 @@ versiondisplay = "{0:.2f}".format(version)
 # Check input file
 # ============================
 # Make a nice menu for the user
-parser = argparse.ArgumentParser(description="* Transform the tbl back to a BED file *", epilog="BLAST must be locally installed.") # Create the object using class argparse
+parser = argparse.ArgumentParser(description="* Transform a tbl file into a simple gff3 file *") # Create the object using class argparse
 
 # Add options
 parser.add_argument('tbl', help="tbl file")
