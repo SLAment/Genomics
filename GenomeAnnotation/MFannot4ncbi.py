@@ -102,9 +102,9 @@ for line in tblopen:
 	elif 'CDS\n' in line:
 		cdsnow = True
 		sys.stdout.write(line)
-	elif 'product' in line and cdsnow:
-		print(f"\t\t\tcodon_start\t1")
-		sys.stdout.write(line)
+	# elif 'product' in line and cdsnow: # if the codon_start is not specified, then NCBI assumes a codon_start of 1
+	# 	print(f"\t\t\tcodon_start\t1")
+	# 	sys.stdout.write(line)
 	elif 'exon\n' in line and cdsnow: # Assume the exon is right after the CDS
 		print(f"\t\t\ttransl_table\t{args.transl_table}")
 		cdsnow = False # don't do it in the gene since I did it now
