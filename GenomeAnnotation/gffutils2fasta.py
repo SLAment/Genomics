@@ -23,6 +23,7 @@
 
 
 ## VERSION notes
+# version 2.0 - The database can now take tRNA as a type; the script no longer assumes mRNA is the first level child of gene
 # version 1.9 - Now using --onlyids and --onlynames at the same time leads to a combined name
 # version 1.7 - Made it more tolerable of CDS without IDs and added an option to extract pseudogenes
 # version 1.5 - "from Bio.Alphabet import generic_dna" was removed from BioPython >1.76. See https://biopython.org/wiki/Alphabet
@@ -42,7 +43,7 @@ import re
 import gffutils
 # ------------------------------------------------------
 
-version = 1.90
+version = 2.00
 versiondisplay = "{0:.2f}".format(version)
 supportedtypes = ["gene", "CDS", "cds", "exon", "noutrs", "similarity", "expressed_sequence_match", "repeat", "pseudogene"] # Unlike the CDS, Exons may contain the UTRs; noutrs is from start to stop codon without introns in nuleotides
 
@@ -102,6 +103,7 @@ dbfnchoice = ':memory:'
 # http://daler.github.io/gffutils/database-ids.html
 id_spec={"gene": ["ID", "Name"], 
 	"mRNA": ["ID", "transcript_id"], 
+	"tRNA": ["ID", "Name"],
 	"repeat": ["ID", "Name"], 
 	"similarity": ["Target"], 
 	"pseudogene": ["ID", "Name"], 
@@ -113,12 +115,13 @@ db = gffutils.create_db(data = args.GFF,
 	dbfn = dbfnchoice,
 	# force = True, # force=True overwrite any existing databases.
 	id_spec = id_spec, 
-	verbose = True,
+	verbose = False,
 	merge_strategy = "create_unique") # Add an underscore an integer at the end for each consecutive occurrence of the same ID 
-print() # if verbose = True
+# print() # if verbose = True
 
 # t1 = time.time()
-from gffutils import inspect; db_results = inspect.inspect(db) # Report
+# from gffutils import inspect; db_results = inspect.inspect(db) # Report
+# print()
 # print("\n\nIt took {0:.1f}s to create database".format(t1 - t0))
 # ---------------------------------
 
@@ -263,10 +266,11 @@ else:
 			child_concat = Seq('')
 
 			for child in db.children(gene, featuretype=args.type, order_by='start'): # if the exon has children features like CDS and UTRs.
-				parents = db.parents(child, featuretype='mRNA') # Assuming there are mRNA features in the gtf/gff file
 				childID = child['ID'][0]
+				# parents = db.parents(child, featuretype='mRNA') # Assuming there are mRNA features in the gtf/gff file
+				parents = db.parents(child, level = 1)
 				exonparent = list(parents)[0]['ID'][0]
-					
+				
 				start = child.start - 1
 				stop = child.end
 
