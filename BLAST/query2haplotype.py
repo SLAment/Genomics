@@ -8,6 +8,7 @@
 # genome. If the --haplo option is used, then it searches for a haplotype
 # instead.
 
+# version 1.8 - created option addquery
 # version 1.7 - changed the behavior of --self and --noself to check if the output matches the queries
 # version 1.6 - added the --makegff option and changed the behaviour of --temp to not include the tailing /
 # version 1.5 - added identity argument, and changed the -i flag to -I
@@ -27,7 +28,7 @@ import subprocess # For the database
 from shutil import rmtree # For removing directories
 import argparse # For the fancy options
 # ------------------------------------------------------
-version = 1.71
+version = 1.8
 versiondisplay = "{0:.2f}".format(version)
 
 # Make a nice menu for the user
@@ -48,6 +49,7 @@ parser.add_argument("--vicinity", "-c", help="Max distance between 5 and 3 end h
 parser.add_argument("--minhaplo", "-m", help="Minimum size of haplotype size (default 0 bp)", type=int, default=0)
 # Other useful things
 parser.add_argument("--makegff", "-g", help="Print a simple gff3 file with the output hits too", default=False, action='store_true')
+parser.add_argument("--addquery", "-q", help="Print the query along with the BLAST results", default=False, action='store_true')
 
 # Make a mutualy-exclusive group
 selfgroup = parser.add_mutually_exclusive_group()
@@ -288,6 +290,10 @@ elif args.self: # Print only sequences that are 100% identical to the queries
 			if thisslice.seq == query_dict[seq].seq:
 				SeqIO.write(thisslice, sys.stdout, "fasta")
 else:
+	if args.addquery:
+		for seq in query_dict.keys():
+			SeqIO.write(query_dict[seq], sys.stdout, "fasta")
+	# Print the BLAST hits or haplotypes
 	SeqIO.write(slices, sys.stdout, "fasta")
 
 # ------------------------------------------------------
