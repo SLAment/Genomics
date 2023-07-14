@@ -5,6 +5,7 @@
 
 # Transform the tbl into a gff3 file so I can see it in IGV
 
+# v 2.0 - Reshaped the parsing to now obtain all the notes of CDS and introns if present; I also added printing of the last gene which was missing before; it can also deal with rDNA correctly now
 # ==================================================
 # Sandra Lorena Ament Velasquez
 # 2023/07/04
@@ -16,7 +17,7 @@ import sys # For reading the input
 import argparse # For the fancy options
 # ------------------------------------------------------
 
-version = 1.0
+version = 2.0
 versiondisplay = "{0:.2f}".format(version)
 
 # ============================
@@ -47,8 +48,16 @@ cdspresent = False
 
 print('##gff-version 3')
 
+def dic2string(dic):
+	dicstring = ';'
+	for key in dic.keys():
+		dicstring = dicstring + key + "=" + dic[key] + ";"
+	return(dicstring.rstrip(";"))
+
+linecount = 0
 for line in tblopen:
-	if line == '\n':
+	linecount +=1
+	if line == '\n' or 'REFERENCE' in line:
 		continue
 	else:
 		cols = line.rstrip("\n").split("\t")		# break the line into columns defined by the tab
@@ -57,18 +66,23 @@ for line in tblopen:
 		seqid = line.rstrip("\n").split(" ")[1]
 	elif 'gene\n' in line:
 		if not borja:
+			if intronpresent: # print the last intron before the gene, assuming introns are the last thing that comes before a gene
+				intronline =  f'{seqid}\tLore\tintron\t{startintron}\t{endintron}\t.\t{sense}\t.\tID={geneID}-intron{introncount};Parent={geneID}-T1' + dic2string(intronattributes)
+				genelines.append(intronline)
+
 			if geneName == '':
 				geneName = geneID
-			print(f'{seqid}\tLore\tgene\t{start}\t{end}\t.\t{sense}\t.\tID={geneID};Name={geneName}') # Ugly gff
+			print(f'\n{seqid}\tLore\tgene\t{start}\t{end}\t.\t{sense}\t.\tID={geneID};Name={geneName}') # Ugly gff
 
 			if not mrnapresent:
-
 				if trnpresent:
-					print(f'{seqid}\tLore\ttRNA\t{start}\t{end}\t.\t{sense}\t.\tID={geneID}-tRNA1;Name={geneID};Parent={geneID};product={thisproduct}') # Assume tRNAs always have a product line
-				elif thisproduct: # no mRNA or tRNA, so make a new mRNA feature with product
-					print(f'{seqid}\tLore\tmRNA\t{start}\t{end}\t.\t{sense}\t.\tID={geneID}-T1;Name={geneID};Parent={geneID};product={thisproduct}') # Assume there is a single mRNA
-				else: # without product
-					print(f'{seqid}\tLore\tmRNA\t{start}\t{end}\t.\t{sense}\t.\tID={geneID}-T1;Name={geneID};Parent={geneID}') # Assume there is a single mRNA
+					print(f'{seqid}\tLore\ttRNA\t{start}\t{end}\t.\t{sense}\t.\tID={geneID}-tRNA;Name={geneID};Parent={geneID}' + dic2string(moreattributes) + dic2string(cdsattributes)) # Assume tRNAs always have a product line
+				elif rnapresent:
+					print(f'{seqid}\tLore\trRNA\t{start}\t{end}\t.\t{sense}\t.\tID={geneID}-rRNA;Name={geneID};Parent={geneID}' + dic2string(moreattributes) + dic2string(cdsattributes)) # Assume there is a single mRNA
+				else: # there was no mRNA in the tbl file, so make one for this gene
+					print(f'{seqid}\tLore\tmRNA\t{start}\t{end}\t.\t{sense}\t.\tID={geneID}-T1;Name={geneID};Parent={geneID}' + dic2string(moreattributes) + dic2string(cdsattributes)) # Assume there is a single mRNA
+			else: # mRNA
+				print(f'{seqid}\tLore\tmRNA\t{start}\t{end}\t.\t{sense}\t.\tID={geneID}-T1;Name={geneID};Parent={geneID}' + dic2string(moreattributes) + dic2string(cdsattributes)) # Assume there is a single mRNA
 
 			for child in genelines:
 				print(child)
@@ -79,9 +93,16 @@ for line in tblopen:
 		geneName = ''
 		mrnapresent = False
 		trnpresent = False
-		cdspresent = False
+		cdspresent = False # in Funannotate, the gene comes after CDS
+		rnapresent = False
 		childcount = 1
-		thisproduct = 0
+		RNAattributes = False
+		moreattributes = {}
+		cdsattributes = {}
+
+		# Intron stuff
+		intronpresent = False
+		introncount = 0
 
 		if cols[0] > cols[1]:
 			start = cols[1]
@@ -101,11 +122,47 @@ for line in tblopen:
 	elif 'tRNA\n' in line:
 		mrnapresent = False
 		trnpresent = True
+		RNAattributes = True
 	elif 'mRNA\n' in line:
 		mrnapresent = True
-	elif 'product' in line:
-		thisproduct = cols[4]
-	elif cdspresent and len(cols) > 3:
+		trnpresent = False
+		RNAattributes = True
+	elif 'rRNA\n' in line:
+		mrnapresent = False
+		trnpresent = False
+		rnapresent = True
+		RNAattributes = True	
+	elif RNAattributes:
+		moreattributes[cols[3]] = cols[4]
+	# elif 'exon\t' in line: # assuming this always comes after the CDS features, as in the MFannot output (in Funannotate, the gene comes after CDS)
+	# 	cdspresent = False
+	elif 'intron\n' in line:
+		# if there was an intron before, print it
+		if intronpresent:
+			intronline =  f'{seqid}\tLore\tintron\t{startintron}\t{endintron}\t.\t{sense}\t.\tID={geneID}-intron{introncount};Parent={geneID}-T1' + dic2string(intronattributes)
+			genelines.append(intronline)
+			intronattributes = {}
+		else: # This is the first time we see this intron, so reset
+			intronpresent = True
+			intronattributes = {}
+
+		if int(cols[0]) > int(cols[1]):
+			startintron = int(cols[1])
+			endintron = int(cols[0])
+			sense = '-'
+		else:
+			startintron = int(cols[0])
+			endintron = int(cols[1])
+			sense = '+'
+
+		cdspresent = False # just in case
+		introncount += 1
+
+	elif intronpresent: # Notes on that intro
+		intronattributes[cols[3]] = cols[4]
+	elif cdspresent and len(cols) > 3: # information about the CDS
+		cdsattributes[cols[3]] = cols[4]
+	elif 'exon\n' in line:
 		cdspresent = False
 	elif 'CDS\n' in line or cdspresent:
 		if int(cols[0]) > int(cols[1]):
@@ -125,6 +182,7 @@ for line in tblopen:
 				phase = 0
 			else:
 				phase = 3 - (cdslen % 3) # I need to think
+			cdspresent = True
 		else: # Not the first CDS
 			if sense == "+": # Use the previous length to figure out the sense
 				phase = 3 - (cdslen % 3)
@@ -138,8 +196,22 @@ for line in tblopen:
 		
 		genelines.append(exonline)
 		genelines.append(cdsline)
-		cdspresent = True
+		
 		childcount += 1
+
+# Print the last gene 
+print(f'\n{seqid}\tLore\tgene\t{start}\t{end}\t.\t{sense}\t.\tID={geneID};Name={geneName}') # Ugly gff
+
+if not mrnapresent:
+	if trnpresent:
+		print(f'{seqid}\tLore\ttRNA\t{start}\t{end}\t.\t{sense}\t.\tID={geneID}-tRNA1;Name={geneID};Parent={geneID}' + dic2string(moreattributes) + dic2string(cdsattributes)) # Assume tRNAs always have a product line
+	else: # there was no mRNA in the tbl file, so make one for this gene
+		print(f'{seqid}\tLore\tmRNA\t{start}\t{end}\t.\t{sense}\t.\tID={geneID}-T1;Name={geneID};Parent={geneID}' + dic2string(moreattributes) + dic2string(cdsattributes)) # Assume there is a single mRNA
+else: # mRNA
+	print(f'{seqid}\tLore\tmRNA\t{start}\t{end}\t.\t{sense}\t.\tID={geneID}-T1;Name={geneID};Parent={geneID}' + dic2string(moreattributes) + dic2string(cdsattributes)) # Assume there is a single mRNA
+
+for child in genelines:
+	print(child)
 
 
 
