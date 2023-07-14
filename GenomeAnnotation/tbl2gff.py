@@ -199,12 +199,19 @@ for line in tblopen:
 		
 		childcount += 1
 
+# Print last intron if present
+if intronpresent: # print the last intron before the gene, assuming introns are the last thing that comes before a gene
+	intronline =  f'{seqid}\tLore\tintron\t{startintron}\t{endintron}\t.\t{sense}\t.\tID={geneID}-intron{introncount};Parent={geneID}-T1' + dic2string(intronattributes)
+	genelines.append(intronline)
+
 # Print the last gene 
 print(f'\n{seqid}\tLore\tgene\t{start}\t{end}\t.\t{sense}\t.\tID={geneID};Name={geneName}') # Ugly gff
 
 if not mrnapresent:
 	if trnpresent:
-		print(f'{seqid}\tLore\ttRNA\t{start}\t{end}\t.\t{sense}\t.\tID={geneID}-tRNA1;Name={geneID};Parent={geneID}' + dic2string(moreattributes) + dic2string(cdsattributes)) # Assume tRNAs always have a product line
+		print(f'{seqid}\tLore\ttRNA\t{start}\t{end}\t.\t{sense}\t.\tID={geneID}-tRNA;Name={geneID};Parent={geneID}' + dic2string(moreattributes) + dic2string(cdsattributes)) # Assume tRNAs always have a product line
+	elif rnapresent:
+		print(f'{seqid}\tLore\trRNA\t{start}\t{end}\t.\t{sense}\t.\tID={geneID}-rRNA;Name={geneID};Parent={geneID}' + dic2string(moreattributes) + dic2string(cdsattributes)) # Assume there is a single mRNA
 	else: # there was no mRNA in the tbl file, so make one for this gene
 		print(f'{seqid}\tLore\tmRNA\t{start}\t{end}\t.\t{sense}\t.\tID={geneID}-T1;Name={geneID};Parent={geneID}' + dic2string(moreattributes) + dic2string(cdsattributes)) # Assume there is a single mRNA
 else: # mRNA
