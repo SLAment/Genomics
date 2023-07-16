@@ -17,7 +17,7 @@ import sys # For reading the input
 import argparse # For the fancy options
 # ------------------------------------------------------
 
-version = 2.0
+version = 2.1
 versiondisplay = "{0:.2f}".format(version)
 
 # ============================
@@ -65,7 +65,7 @@ for line in tblopen:
 	if '>Feature' in line:
 		seqid = line.rstrip("\n").split(" ")[1]
 	elif 'gene\n' in line:
-		if not borja:
+		if not borja: # Print the previous gene
 			if intronpresent: # print the last intron before the gene, assuming introns are the last thing that comes before a gene
 				intronline =  f'{seqid}\tLore\tintron\t{startintron}\t{endintron}\t.\t{sense}\t.\tID={geneID}-intron{introncount};Parent={geneID}-T1' + dic2string(intronattributes)
 				genelines.append(intronline)
@@ -104,7 +104,7 @@ for line in tblopen:
 		intronpresent = False
 		introncount = 0
 
-		if cols[0] > cols[1]:
+		if int(cols[0]) > int(cols[1]):
 			start = cols[1]
 			end = cols[0]
 			sense = '-'
