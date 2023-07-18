@@ -23,6 +23,7 @@
 
 
 ## VERSION notes
+# version 2.1 - The database can now take rRNA as a type
 # version 2.0 - The database can now take tRNA as a type; the script no longer assumes mRNA is the first level child of gene
 # version 1.9 - Now using --onlyids and --onlynames at the same time leads to a combined name
 # version 1.7 - Made it more tolerable of CDS without IDs and added an option to extract pseudogenes
@@ -43,7 +44,7 @@ import re
 import gffutils
 # ------------------------------------------------------
 
-version = 2.00
+version = 2.10
 versiondisplay = "{0:.2f}".format(version)
 supportedtypes = ["gene", "CDS", "cds", "exon", "noutrs", "similarity", "expressed_sequence_match", "repeat", "pseudogene"] # Unlike the CDS, Exons may contain the UTRs; noutrs is from start to stop codon without introns in nuleotides
 
@@ -103,6 +104,7 @@ dbfnchoice = ':memory:'
 # http://daler.github.io/gffutils/database-ids.html
 id_spec={"gene": ["ID", "Name"], 
 	"mRNA": ["ID", "transcript_id"], 
+	"rRNA": ["ID", "Name"],
 	"tRNA": ["ID", "Name"],
 	"repeat": ["ID", "Name"], 
 	"similarity": ["Target"], 
