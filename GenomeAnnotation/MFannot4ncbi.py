@@ -54,7 +54,7 @@ for seq_record in fastaopen: # Assume there is only one sequence that matters
 	mtname = seq_record.id
 	seqlen = len(seq_record)
 
-genecount = args.startnumber - 1
+genecount = args.startnumber # - 1
 
 tRNAdic = {"Alanine": "Ala",
 			"Arginine": "Arg",
