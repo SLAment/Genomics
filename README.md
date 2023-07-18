@@ -50,11 +50,13 @@ The scripts are made to either parse the BLAST output, filter it or modify it, o
 
 I ran it as
 
-	% ./MFannot4ncbi.py mfannot_output.fasta.new.tbl MyMtContig.fa -l XXXX -s 10 -n 114111 > MyMtContig.tbl
+	% ./MFannot4ncbi.py mfannot_output.fasta.new.tbl MyMtContig.fa -l XXXX -s 10 -n 114110 > MyMtContig.tbl
 
-Where XXXX is the NCBI locus_tag, and 114111 is a number I chose to start the gene codes for all the genes in the mitochondrial contig. This could be 1, or whatever you want, but if you already have nuclear genome contigs with numbers, you can continue those numbers for your mitochondrial contig.
+Where XXXX is the NCBI locus_tag, and 114110 is a number I chose to start the gene codes for all the genes in the mitochondrial contig. This could be 1, or whatever you want, but if you already have nuclear genome contigs with numbers, you can continue those numbers for your mitochondrial contig.
 
-- `tbl2gff.py` - Experimental little script to transform a tbl file, like the one produced by `MFannot4ncbi.py`, into a gff3 file. At the moment the phase of the CDS mightbe wrong (specially the ones in the - sense).
+- `tbl2gff.py` - Experimental little script to transform a tbl file, like the one produced by `MFannot4ncbi.py`, into a gff3 file.
+
+- `gff3TOtbl.py` - A simple script to transform a basic gff3 to a tbl file, similar to the one produced by `MFannot4ncbi.py`. It can't handle multiple mRNA isoforms.
 
 ## Miscellaneous
 
