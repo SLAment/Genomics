@@ -30,8 +30,7 @@
 # version 1.5 - "from Bio.Alphabet import generic_dna" was removed from BioPython >1.76. See https://biopython.org/wiki/Alphabet
 # ==================================================
 # Sandra Lorena Ament Velasquez
-# Johannesson Lab, Evolutionary Biology Center, Uppsala University, Sweden
-# 2019/03/27
+# 2019/03/27 - 2023/07/18
 # +++++++++++++++++++++++++++++++++++++++++++++++++
 
 # ------------------------------------------------------

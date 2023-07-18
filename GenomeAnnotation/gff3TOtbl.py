@@ -3,7 +3,7 @@
 
 # ================== gff3TOtbl =================
 
-# Transform the a simple gff3 file to a simple tbl
+# Transform a basic gff3 file to a simple tbl
 
 # ==================================================
 # Sandra Lorena Ament Velasquez
