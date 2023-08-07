@@ -31,6 +31,7 @@ parser = argparse.ArgumentParser(description="* Transform a gff3 file into a tbl
 parser.add_argument('gff', help="gff3 file")
 parser.add_argument('fasta', help="Fasta sequence of the mitochondrial genome")
 parser.add_argument('--mfannot', '-m', help="Follow the style of the MFannot tbl file regarding exons and intron", default=False, action='store_true')
+parser.add_argument("--code", "-c", help="Genetic code used for traslation (--proteinon) as an NCBI number. Default: 4", default=4, type=int)
 
 # extras
 parser.add_argument('--version', '-v', action='version', version='%(prog)s ' + versiondisplay)
@@ -60,7 +61,7 @@ dbfnchoice = ':memory:'
 # http://daler.github.io/gffutils/database-ids.html
 id_spec={"gene": ["ID", "Name"], 
 	"mRNA": ["ID", "transcript_id"], 
-	"rDNA": ["ID", "Name"], 
+	"rRNA": ["ID", "Name"], 
 	"tRNA": ["ID", "Name"]} 
 
 db = gffutils.create_db(data = args.gff, 
@@ -78,6 +79,12 @@ db = gffutils.create_db(data = args.gff,
 # print("\n\nIt took {0:.1f}s to create database".format(t1 - t0))
 # ---------------------------------
 
+if args.code == 4:
+	startcodons_list = ['TTA', 'TTG', 'CTG', 'ATT', 'ATC', 'ATG', 'GTG']
+else:
+	startcodons_list = ['ATG']
+
+
 # ---------------------------------
 # Read fasta file
 # ---------------------------------
@@ -85,6 +92,7 @@ seqlens = {}
 for seq_record in fastaopen: # Assume there is only one sequence that matters
 	mtname = seq_record.id
 	seqlens[mtname] = len(seq_record)
+	mtseq = seq_record
 
 # ---------------------------------
 # Produce the tbl file
@@ -118,13 +126,35 @@ for seqid in seqlens.keys():
 			print("The gene {gene.id} has no strand information!")
 			sys.exit(1)
 
+		## ---- Check if the first codon is a start codon ----
+		partial = False
+		cdschildren = [child for child in db.children(gene, featuretype='CDS', order_by='start')]
+		if cdschildren != []: # there are CDS features
+			if gene.strand == '+':
+				firstcodon = cdschildren[0]
+				startcodonstart = firstcodon.start - 1 # The -1 is because the gff is base 1
+				startcodonseq = mtseq[startcodonstart:startcodonstart+3].seq
+
+				if startcodonseq not in startcodons_list:
+					partial = True
+					start = "<" + str(start)
+			else:
+				firstcodon = cdschildren[len(cdschildren) - 1]
+				startcodonstart = firstcodon.end - 3
+				startcodonseq = mtseq[startcodonstart:startcodonstart+3].seq.reverse_complement()
+			
+				if startcodonseq not in startcodons_list:
+					partial = True
+					start = ">" + str(start)
+		## ------
+
 		print(f"{start}\t{end}\tgene")
 		print(f"\t\t\tlocus_tag\t{gene.id}")
 		# print(gene)
 		print(f"\t\t\tgene\t{gene.attributes['Name'][0]}")
 		printAttributes(gene)
 
-		# No print the children
+		# Now print the children
 		for child in list(db.children(gene, order_by='start', level = 1)): 
 			if child.featuretype == "tRNA" or child.featuretype == 'rRNA': # Then print attributes right away
 				print(f"{start}\t{end}\t{child.featuretype}")
@@ -135,14 +165,18 @@ for seqid in seqlens.keys():
 		else:
 			listoffeatures = ['exon', 'CDS'] # similar to Funannotate's tbl files
 
+		childcount = 0
 		for childtype in listoffeatures:
 			children = [child for child in db.children(gene, featuretype=childtype, order_by='start')]
 			
-			if children != []: # tRNA or rRNA wouldn't have children
+			if children != []: # tRNA or rRNA might not have children
 				if gene.strand == '+':
 					# Print the first exon as an mRNA feature
 					start = children[0].start
 					end = children[0].end
+
+					if partial and not childcount:
+						start = "<" + str(start)
 
 					if childtype == "exon":
 						print(f"{start}\t{end}\tmRNA") 
@@ -160,6 +194,9 @@ for seqid in seqlens.keys():
 					# Print the first exon as an mRNA feature
 					start = children[lastchild].end
 					end = children[lastchild].start
+
+					if partial and not childcount:
+						start = ">" + str(start)
 
 					if childtype == "exon":
 						print(f"{start}\t{end}\tmRNA") 
@@ -182,12 +219,14 @@ for seqid in seqlens.keys():
 							print(f"\t\t\t{attri}\t{mrna.attributes[attri][0]}")
 				elif childtype == "CDS":
 					printAttributes(mrna)
+			childcount += 1
 
 		# Print the exons and introns too
 		if args.mfannot:
 			# Exons
 			exonlist = [child for child in db.children(gene, featuretype='exon', order_by='start') if 'orf' not in gene.attributes['Name'][0]]
 			count = 0
+			# if gene.id == "QC761_0114485": print("hola", [child for child in db.children(gene, order_by='start')])
 			for exon in exonlist:
 				count += 1
 				if gene.strand == '+':
