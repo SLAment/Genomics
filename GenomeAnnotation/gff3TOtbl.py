@@ -19,7 +19,7 @@ import gffutils
 from Bio import SeqIO
 # ------------------------------------------------------
 
-version = 1.10
+version = 1.11
 versiondisplay = "{0:.2f}".format(version)
 
 # ============================
@@ -90,11 +90,7 @@ stopcodons_list = ['TAG', 'TAA', 'TGA']
 # ---------------------------------
 # Read fasta file
 # ---------------------------------
-seqlens = {}
-for seq_record in fastaopen: # Assume there is only one sequence that matters
-	mtname = seq_record.id
-	seqlens[mtname] = len(seq_record)
-	mtseq = seq_record
+records_dict = SeqIO.to_dict(fastaopen)
 
 # ---------------------------------
 # Produce the tbl file
@@ -109,11 +105,13 @@ def printAttributes(feature):
 			result += f"\t\t\t{attri}\t{fullattri}\n"
 		sys.stdout.write(result)
 
-for seqid in seqlens.keys():
+for seqid in records_dict.keys():
 	genesinctg = [gene for gene in db.features_of_type("gene") if gene.chrom == seqid] # Get only the genes from this contig
+	ctgseq = records_dict[seqid]
+
 	# Head per contig
 	print(f">Feature {seqid}")
-	print(f"1\t{seqlens[seqid]}\tREFERENCE")
+	print(f"1\t{len(ctgseq)}\tREFERENCE")
 
 	# Print all genes in this contig
 	for gene in genesinctg:
@@ -138,7 +136,7 @@ for seqid in seqlens.keys():
 				## ---- Check if the first codon is a start codon ----
 				firstcds = cdschildren[0]
 				startcodonstart = firstcds.start - 1 # The -1 is because the gff is base 1
-				startcodonseq = mtseq[startcodonstart:startcodonstart+3].seq
+				startcodonseq = ctgseq[startcodonstart:startcodonstart+3].seq
 
 				if startcodonseq not in startcodons_list:
 					partialstart = True
@@ -147,7 +145,7 @@ for seqid in seqlens.keys():
 				## ---- Check if the last codon is a stop codon ----
 				lastcds = cdschildren[len(cdschildren) - 1]
 				stopcodonstart = lastcds.end - 3
-				stopcodonseq = mtseq[stopcodonstart:stopcodonstart+3].seq
+				stopcodonseq = ctgseq[stopcodonstart:stopcodonstart+3].seq
 				
 				if stopcodonseq not in stopcodons_list:
 					partialend = True
@@ -157,7 +155,7 @@ for seqid in seqlens.keys():
 				## ---- Check if the last codon is a start codon ----
 				firstcds = cdschildren[len(cdschildren) - 1]
 				startcodonstart = firstcds.end - 3
-				startcodonseq = mtseq[startcodonstart:startcodonstart+3].seq.reverse_complement()
+				startcodonseq = ctgseq[startcodonstart:startcodonstart+3].seq.reverse_complement()
 				
 				if startcodonseq not in startcodons_list:
 					partialstart = True
@@ -166,7 +164,7 @@ for seqid in seqlens.keys():
 				## ---- Check if the first codon is a stop codon ----
 				lastcds = cdschildren[0]
 				stopcodonstart = lastcds.start - 1 # The -1 is because the gff is base 1
-				stopcodonseq = mtseq[stopcodonstart:stopcodonstart+3].seq.reverse_complement()
+				stopcodonseq = ctgseq[stopcodonstart:stopcodonstart+3].seq.reverse_complement()
 				
 				if stopcodonseq not in stopcodons_list:
 					partialend = True
@@ -176,8 +174,9 @@ for seqid in seqlens.keys():
 
 		print(f"{start}\t{end}\tgene")
 		print(f"\t\t\tlocus_tag\t{gene.id}")
-		# print(gene)
-		print(f"\t\t\tgene\t{gene.attributes['Name'][0]}")
+		
+		if 'Name' in gene.attributes:
+			print(f"\t\t\tgene\t{gene.attributes['Name'][0]}")
 		printAttributes(gene)
 
 		# Now print the children
@@ -228,10 +227,10 @@ for seqid in seqlens.keys():
 					elif childtype == "CDS":
 						print(f"{start}\t{end}\tCDS") 
 
-					childindexes = list(reversed(range(0,len(children))))
+					# childindexes = list(reversed(range(0,len(children))))
 		
 					# The rest of the exons are just the coordinates
-					for exon in childindexes[1:]: # Exclude the last exon
+					for exon in children[1:]: # Exclude the last exon
 						start = exon.start
 						end = exon.end
 						print(f"{end}\t{start}") 
