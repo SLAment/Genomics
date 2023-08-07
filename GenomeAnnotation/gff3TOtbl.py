@@ -5,7 +5,7 @@
 
 # Transform a basic gff3 file to a simple tbl
 
-# TODO: Check for presence of stop codons too to make partial genes (right now it only checks the start codon)
+# NOTE: The script can't deal with Ontology terms!
 # ==================================================
 # Sandra Lorena Ament Velasquez
 # 2023/07/13
@@ -19,7 +19,7 @@ import gffutils
 from Bio import SeqIO
 # ------------------------------------------------------
 
-version = 1.11
+version = 1.20
 versiondisplay = "{0:.2f}".format(version)
 
 # ============================
@@ -95,15 +95,34 @@ records_dict = SeqIO.to_dict(fastaopen)
 # ---------------------------------
 # Produce the tbl file
 # ---------------------------------
-def printAttributes(feature):
+
+def printAttributes(feature): # like funannotate output
+	ignoredattributes = ["ID", "Name", 'Parent', "color", "transcript_id", "protein_id"]	
 	for attri in feature.attributes:
-		result = ''
-		if attri == "ID" or attri == "Name" or attri == 'Parent' or attri == "color":
+		if attri in ignoredattributes:
 			pass
+		elif attri == "product":
+			sys.stdout.write(f"\t\t\tproduct\t{feature.attributes['product'][0]}\n")
 		else:
-			fullattri = ','.join(feature.attributes[attri])
-			result += f"\t\t\t{attri}\t{fullattri}\n"
-		sys.stdout.write(result)
+			if args.mfannot:
+				result = ''
+				fullattri = ','.join(feature.attributes[attri])
+				result += f"\t\t\t{attri}\t{fullattri}\n"
+				sys.stdout.write(result)
+			else:
+				for item in feature.attributes[attri]:
+					if attri == 'Dbxref':
+						sys.stdout.write(f"\t\t\tdb_xref\t{item}\n")
+					else: 
+						sys.stdout.write(f"\t\t\t{attri}\t{item}\n")
+	
+	if feature.featuretype not in ['gene', 'intron']:
+		transcript_id = f"gnl|ncbi|{feature.attributes['ID'][0]}"
+		sys.stdout.write(f"\t\t\ttranscript_id\t{transcript_id}\n")
+
+		if feature.featuretype != 'tRNA':
+			protein_id = f"gnl|ncbi|{feature.attributes['Parent'][0]}"
+			sys.stdout.write(f"\t\t\tprotein_id\t{protein_id}\n")
 
 for seqid in records_dict.keys():
 	genesinctg = [gene for gene in db.features_of_type("gene") if gene.chrom == seqid] # Get only the genes from this contig
@@ -171,12 +190,12 @@ for seqid in records_dict.keys():
 					end = "<" + str(end)
 
 		## ------
-
+		## Gene body
 		print(f"{start}\t{end}\tgene")
+		if 'Name' in gene.attributes: # often genes have no name
+			if gene.attributes['Name'][0] != gene.attributes['ID'][0]: # ignore if they are the same
+				print(f"\t\t\tgene\t{gene.attributes['Name'][0]}")
 		print(f"\t\t\tlocus_tag\t{gene.id}")
-		
-		if 'Name' in gene.attributes:
-			print(f"\t\t\tgene\t{gene.attributes['Name'][0]}")
 		printAttributes(gene)
 
 		# Now print the children
@@ -223,28 +242,41 @@ for seqid in records_dict.keys():
 						start = ">" + str(start)
 
 					if childtype == "exon":
-						print(f"{start}\t{end}\tmRNA") 
+						print(f"{start}\t{end}\t{mainchild.featuretype}") 
 					elif childtype == "CDS":
 						print(f"{start}\t{end}\tCDS") 
 
-					# childindexes = list(reversed(range(0,len(children))))
-		
 					# The rest of the exons are just the coordinates
-					for exon in children[1:]: # Exclude the last exon
+					childindexes = list(reversed(range(0,len(children))))
+					for ind in childindexes[1:]: # Exclude the last exon
+						exon = children[ind]
 						start = exon.start
 						end = exon.end
 						print(f"{end}\t{start}") 
 
 			#  --- Print attributes ---
 			if childtype == "exon":
-				if mainchild.featuretype != 'tRNA': # tRNA was printed above
-					for attri in child.attributes:
-						if attri == "product" or attri == "transcript_id" or attri == "protein_id":
-							print(f"\t\t\t{attri}\t{child.attributes[attri][0]}")
+				if mainchild.featuretype != 'tRNA': # tRNA was printed above	
+					if "protein_id" not in child.attributes or "transcript_id" not in child.attributes:	
+						if "product" in child.attributes:
+							print(f"\t\t\tproduct\t{mainchild.attributes['product'][0]}")
+
+						protein_id = f"gnl|ncbi|{mainchild.attributes['Parent'][0]}"
+						transcript_id = f"gnl|ncbi|{mainchild.attributes['ID'][0]}"
+						
+						sys.stdout.write(f"\t\t\ttranscript_id\t{transcript_id}\n")
+						sys.stdout.write(f"\t\t\tprotein_id\t{protein_id}\n")
+					else:
+						for attri in child.attributes:
+							if attri == "transcript_id" or attri == "protein_id":
+								print(f"\t\t\t{attri}\tgnl|ncbi|{child.attributes[attri][0]}")
+							elif attri == "product":
+
+								print(f"\t\t\t{attri}\t{child.attributes[attri][0]}")
+
 			elif childtype == "CDS":
 				if mainchild.featuretype == 'mRNA': # not necessary for a rRNA
 					printAttributes(child)
-			
 
 		# Print the exons and introns too if they exist
 		if args.mfannot:
