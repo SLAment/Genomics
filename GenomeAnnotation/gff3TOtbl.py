@@ -203,6 +203,9 @@ for seqid in records_dict.keys():
 			if child.featuretype == "tRNA": # Then print attributes right away because there should be a single tRNA feature
 				print(f"{start}\t{end}\t{child.featuretype}")
 				printAttributes(child)
+			elif child.featuretype == "rRNA":
+				if list(db.children(gene, order_by='start', level = 2)) == []: # there are no introns within the rRNA
+					print(f"{start}\t{end}\t{child.featuretype}")
 			mainchild = child
 
 		listoffeatures = ['exon', 'CDS'] # similar to Funannotate's tbl files (remove 'exon' to have no 'mRNA' feature)
@@ -265,13 +268,14 @@ for seqid in records_dict.keys():
 						transcript_id = f"gnl|ncbi|{mainchild.attributes['ID'][0]}"
 						
 						sys.stdout.write(f"\t\t\ttranscript_id\t{transcript_id}\n")
-						sys.stdout.write(f"\t\t\tprotein_id\t{protein_id}\n")
+						if mainchild.featuretype != 'rRNA':
+							sys.stdout.write(f"\t\t\tprotein_id\t{protein_id}\n")
 					else:
+
 						for attri in child.attributes:
 							if attri == "transcript_id" or attri == "protein_id":
 								print(f"\t\t\t{attri}\tgnl|ncbi|{child.attributes[attri][0]}")
 							elif attri == "product":
-
 								print(f"\t\t\t{attri}\t{child.attributes[attri][0]}")
 
 			elif childtype == "CDS":
