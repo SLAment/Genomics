@@ -180,6 +180,7 @@ else:
 if args.makegff: 
 	gfffile = open(args.temp + "/" + nameref + '_vs_' + nameqry + '.gff3', 'w')
 	gfffile.write("##gff-version 3\n")
+	hitsdic = {}
 
 
 if args.haplo: # We are looking for entire haplotypes and the blast is only the edges
@@ -277,6 +278,11 @@ else: # The BLAST hits themselves are the haplotypes
 			slices.append(slice)
 
 			if args.makegff:
+				# if hitseq.id in hitsdic.keys():
+				# 	hitsdic[hitseq.id] += 1
+				# else:
+				# 	hitsdic[hitseq.id] = 1
+				# gfffile.write(f"{hitseq.id}\tBLASTn\tsimilarity\t{start_final + 1}\t{end_final}\t.\t.\t.\tID={hit[0]}_{hitsdic[hitseq.id]};Name={hit[0]};eval={hit[10]};identity={hit[2]};length={len(slice)};color=#000000;\n")
 				gfffile.write(f"{hitseq.id}\tBLASTn\tsimilarity\t{start_final + 1}\t{end_final}\t.\t.\t.\tID={hit[0]};Name={hit[0]};eval={hit[10]};identity={hit[2]};length={len(slice)};color=#000000;\n")
 
 if args.noself: # Print only sequences that are different from the queries
