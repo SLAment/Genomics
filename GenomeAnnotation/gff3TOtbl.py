@@ -5,6 +5,7 @@
 
 # Transform a basic gff3 file to a simple tbl
 
+# TODO: Check for presence of stop codons too to make partial genes (right now it only checks the start codon)
 # ==================================================
 # Sandra Lorena Ament Velasquez
 # 2023/07/13
@@ -18,7 +19,7 @@ import gffutils
 from Bio import SeqIO
 # ------------------------------------------------------
 
-version = 1.0
+version = 1.01
 versiondisplay = "{0:.2f}".format(version)
 
 # ============================
@@ -80,7 +81,7 @@ db = gffutils.create_db(data = args.gff,
 # ---------------------------------
 
 if args.code == 4:
-	startcodons_list = ['TTA', 'TTG', 'CTG', 'ATT', 'ATC', 'ATG', 'GTG']
+	startcodons_list = ['TTA', 'TTG', 'CTG', 'ATT', 'ATC', 'ATA', 'ATG', 'GTG']
 else:
 	startcodons_list = ['ATG']
 
@@ -159,13 +160,9 @@ for seqid in seqlens.keys():
 			if child.featuretype == "tRNA" or child.featuretype == 'rRNA': # Then print attributes right away
 				print(f"{start}\t{end}\t{child.featuretype}")
 				printAttributes(child)
-		
-		if args.mfannot:
-			listoffeatures = ['CDS']
-		else:
-			listoffeatures = ['exon', 'CDS'] # similar to Funannotate's tbl files
 
-		childcount = 0
+		listoffeatures = ['exon', 'CDS'] # similar to Funannotate's tbl files (remove 'exon' to have no 'mRNA' feature)
+
 		for childtype in listoffeatures:
 			children = [child for child in db.children(gene, featuretype=childtype, order_by='start')]
 			
@@ -175,13 +172,13 @@ for seqid in seqlens.keys():
 					start = children[0].start
 					end = children[0].end
 
-					if partial and not childcount:
+					if partial:
 						start = "<" + str(start)
 
 					if childtype == "exon":
 						print(f"{start}\t{end}\tmRNA") 
 					elif childtype == "CDS":
-						print(f"{start}\t{end}\tCDS") 
+						print(f"{start}\t{end}\tCDS")
 
 					# The rest of the exons are just the coordinates
 					for exon in children[1:]:
@@ -219,7 +216,7 @@ for seqid in seqlens.keys():
 							print(f"\t\t\t{attri}\t{mrna.attributes[attri][0]}")
 				elif childtype == "CDS":
 					printAttributes(mrna)
-			childcount += 1
+			
 
 		# Print the exons and introns too
 		if args.mfannot:
