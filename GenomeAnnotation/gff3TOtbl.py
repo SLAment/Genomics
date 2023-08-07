@@ -19,7 +19,7 @@ import gffutils
 from Bio import SeqIO
 # ------------------------------------------------------
 
-version = 1.01
+version = 1.10
 versiondisplay = "{0:.2f}".format(version)
 
 # ============================
@@ -85,6 +85,7 @@ if args.code == 4:
 else:
 	startcodons_list = ['ATG']
 
+stopcodons_list = ['TAG', 'TAA', 'TGA']
 
 # ---------------------------------
 # Read fasta file
@@ -127,26 +128,50 @@ for seqid in seqlens.keys():
 			print("The gene {gene.id} has no strand information!")
 			sys.exit(1)
 
-		## ---- Check if the first codon is a start codon ----
-		partial = False
+		## ---- Make partial genes ----
+		partialstart = False
+		partialend = False
+
 		cdschildren = [child for child in db.children(gene, featuretype='CDS', order_by='start')]
 		if cdschildren != []: # there are CDS features
 			if gene.strand == '+':
-				firstcodon = cdschildren[0]
-				startcodonstart = firstcodon.start - 1 # The -1 is because the gff is base 1
+				## ---- Check if the first codon is a start codon ----
+				firstcds = cdschildren[0]
+				startcodonstart = firstcds.start - 1 # The -1 is because the gff is base 1
 				startcodonseq = mtseq[startcodonstart:startcodonstart+3].seq
 
 				if startcodonseq not in startcodons_list:
-					partial = True
+					partialstart = True
 					start = "<" + str(start)
+
+				## ---- Check if the last codon is a stop codon ----
+				lastcds = cdschildren[len(cdschildren) - 1]
+				stopcodonstart = lastcds.end - 3
+				stopcodonseq = mtseq[stopcodonstart:stopcodonstart+3].seq
+				
+				if stopcodonseq not in stopcodons_list:
+					partialend = True
+					end = ">" + str(end)
+
 			else:
-				firstcodon = cdschildren[len(cdschildren) - 1]
-				startcodonstart = firstcodon.end - 3
+				## ---- Check if the last codon is a start codon ----
+				firstcds = cdschildren[len(cdschildren) - 1]
+				startcodonstart = firstcds.end - 3
 				startcodonseq = mtseq[startcodonstart:startcodonstart+3].seq.reverse_complement()
-			
+				
 				if startcodonseq not in startcodons_list:
-					partial = True
+					partialstart = True
 					start = ">" + str(start)
+
+				## ---- Check if the first codon is a stop codon ----
+				lastcds = cdschildren[0]
+				stopcodonstart = lastcds.start - 1 # The -1 is because the gff is base 1
+				stopcodonseq = mtseq[stopcodonstart:stopcodonstart+3].seq.reverse_complement()
+				
+				if stopcodonseq not in stopcodons_list:
+					partialend = True
+					end = "<" + str(end)
+
 		## ------
 
 		print(f"{start}\t{end}\tgene")
@@ -156,27 +181,30 @@ for seqid in seqlens.keys():
 		printAttributes(gene)
 
 		# Now print the children
-		for child in list(db.children(gene, order_by='start', level = 1)): 
-			if child.featuretype == "tRNA" or child.featuretype == 'rRNA': # Then print attributes right away
+		for child in list(db.children(gene, order_by='start', level = 1)): # determine the main type of children
+			if child.featuretype == "tRNA": # Then print attributes right away because there should be a single tRNA feature
 				print(f"{start}\t{end}\t{child.featuretype}")
 				printAttributes(child)
+			mainchild = child
 
 		listoffeatures = ['exon', 'CDS'] # similar to Funannotate's tbl files (remove 'exon' to have no 'mRNA' feature)
 
 		for childtype in listoffeatures:
 			children = [child for child in db.children(gene, featuretype=childtype, order_by='start')]
-			
+
 			if children != []: # tRNA or rRNA might not have children
 				if gene.strand == '+':
 					# Print the first exon as an mRNA feature
 					start = children[0].start
 					end = children[0].end
 
-					if partial:
+					if partialstart:
 						start = "<" + str(start)
+					if partialend:
+						end = ">" + str(end)
 
 					if childtype == "exon":
-						print(f"{start}\t{end}\tmRNA") 
+						print(f"{start}\t{end}\t{mainchild.featuretype}") 
 					elif childtype == "CDS":
 						print(f"{start}\t{end}\tCDS")
 
@@ -192,7 +220,7 @@ for seqid in seqlens.keys():
 					start = children[lastchild].end
 					end = children[lastchild].start
 
-					if partial and not childcount:
+					if partialstart:
 						start = ">" + str(start)
 
 					if childtype == "exon":
@@ -209,16 +237,17 @@ for seqid in seqlens.keys():
 						print(f"{end}\t{start}") 
 
 			#  --- Print attributes ---
-			for mrna in db.children(gene, featuretype='mRNA', order_by='start'): # Assume there is a sinlge mRNA 
-				if childtype == "exon":
-					for attri in mrna.attributes:
+			if childtype == "exon":
+				if mainchild.featuretype != 'tRNA': # tRNA was printed above
+					for attri in child.attributes:
 						if attri == "product" or attri == "transcript_id" or attri == "protein_id":
-							print(f"\t\t\t{attri}\t{mrna.attributes[attri][0]}")
-				elif childtype == "CDS":
-					printAttributes(mrna)
+							print(f"\t\t\t{attri}\t{child.attributes[attri][0]}")
+			elif childtype == "CDS":
+				if mainchild.featuretype == 'mRNA': # not necessary for a rRNA
+					printAttributes(child)
 			
 
-		# Print the exons and introns too
+		# Print the exons and introns too if they exist
 		if args.mfannot:
 			# Exons
 			exonlist = [child for child in db.children(gene, featuretype='exon', order_by='start') if 'orf' not in gene.attributes['Name'][0]]
