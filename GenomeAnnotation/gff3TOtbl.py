@@ -19,7 +19,7 @@ import gffutils
 from Bio import SeqIO
 # ------------------------------------------------------
 
-version = 1.20
+version = 1.21
 versiondisplay = "{0:.2f}".format(version)
 
 # ============================
@@ -116,13 +116,11 @@ def printAttributes(feature): # like funannotate output
 					else: 
 						sys.stdout.write(f"\t\t\t{attri}\t{item}\n")
 	
-	if feature.featuretype not in ['gene', 'intron']:
+	if feature.featuretype not in ['gene', 'intron', 'tRNA' , 'rRNA']:
 		transcript_id = f"gnl|ncbi|{feature.attributes['ID'][0]}"
 		sys.stdout.write(f"\t\t\ttranscript_id\t{transcript_id}\n")
-
-		if feature.featuretype != 'tRNA':
-			protein_id = f"gnl|ncbi|{feature.attributes['Parent'][0]}"
-			sys.stdout.write(f"\t\t\tprotein_id\t{protein_id}\n")
+		protein_id = f"gnl|ncbi|{feature.attributes['Parent'][0]}"
+		sys.stdout.write(f"\t\t\tprotein_id\t{protein_id}\n")
 
 for seqid in records_dict.keys():
 	genesinctg = [gene for gene in db.features_of_type("gene") if gene.chrom == seqid] # Get only the genes from this contig
@@ -204,7 +202,7 @@ for seqid in records_dict.keys():
 				print(f"{start}\t{end}\t{child.featuretype}")
 				printAttributes(child)
 			elif child.featuretype == "rRNA":
-				if list(db.children(gene, order_by='start', level = 2)) == []: # there are no introns within the rRNA
+				if list(db.children(gene, order_by='start', level = 2)) == []: # there are no introns within this rRNA
 					print(f"{start}\t{end}\t{child.featuretype}")
 			mainchild = child
 
@@ -263,17 +261,15 @@ for seqid in records_dict.keys():
 					if "protein_id" not in child.attributes or "transcript_id" not in child.attributes:	
 						if "product" in child.attributes:
 							print(f"\t\t\tproduct\t{mainchild.attributes['product'][0]}")
-
-						protein_id = f"gnl|ncbi|{mainchild.attributes['Parent'][0]}"
-						transcript_id = f"gnl|ncbi|{mainchild.attributes['ID'][0]}"
 						
-						sys.stdout.write(f"\t\t\ttranscript_id\t{transcript_id}\n")
 						if mainchild.featuretype != 'rRNA':
+							protein_id = f"gnl|ncbi|{mainchild.attributes['Parent'][0]}"
+							transcript_id = f"gnl|ncbi|{mainchild.attributes['ID'][0]}"
+							sys.stdout.write(f"\t\t\ttranscript_id\t{transcript_id}\n")
 							sys.stdout.write(f"\t\t\tprotein_id\t{protein_id}\n")
 					else:
-
 						for attri in child.attributes:
-							if attri == "transcript_id" or attri == "protein_id":
+							if attri in ["transcript_id", "protein_id"] and mainchild.featuretype != 'rRNA':
 								print(f"\t\t\t{attri}\tgnl|ncbi|{child.attributes[attri][0]}")
 							elif attri == "product":
 								print(f"\t\t\t{attri}\t{child.attributes[attri][0]}")
