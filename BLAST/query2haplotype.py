@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # encoding: utf-8
 
 # ================== query2haplotype =================
@@ -8,6 +8,7 @@
 # genome. If the --haplo option is used, then it searches for a haplotype
 # instead.
 
+# version 1.9 - added option tophit (but not for --haplo) and fixed the script for python3
 # version 1.8 - created option addquery
 # version 1.7 - changed the behavior of --self and --noself to check if the output matches the queries
 # version 1.6 - added the --makegff option and changed the behaviour of --temp to not include the tailing /
@@ -28,11 +29,11 @@ import subprocess # For the database
 from shutil import rmtree # For removing directories
 import argparse # For the fancy options
 # ------------------------------------------------------
-version = 1.8
+version = 1.9
 versiondisplay = "{0:.2f}".format(version)
 
 # Make a nice menu for the user
-parser = argparse.ArgumentParser(description="* Extract BLAST hits or haplotypes *", epilog="Warning: the script doesn't work properly if the input sequences have tracks of IUPAC symbols at the beginning and end of the sequences, or '?' symbols anywhere.") # Create the object using class argparse
+parser = argparse.ArgumentParser(description="* Extract BLAST hits or haplotypes *", epilog="Warning: the script doesn't work properly if the input sequences have tracks of IUPAC symbols at the beginning and end of the sequences, or '?' symbols anywhere. For python3.") # Create the object using class argparse
 
 # Mandatory options
 parser.add_argument('assembly', help="Fasta file to extract from")
@@ -50,6 +51,7 @@ parser.add_argument("--minhaplo", "-m", help="Minimum size of haplotype size (de
 # Other useful things
 parser.add_argument("--makegff", "-g", help="Print a simple gff3 file with the output hits too", default=False, action='store_true')
 parser.add_argument("--addquery", "-q", help="Print the query along with the BLAST results", default=False, action='store_true')
+parser.add_argument("--tophit", "-x", help="Slice only the first, top hit of the BLAST search (won't work with --haplo)", default=False, action='store_true')
 
 # Make a mutualy-exclusive group
 selfgroup = parser.add_mutually_exclusive_group()
@@ -249,6 +251,9 @@ if args.haplo: # We are looking for entire haplotypes and the blast is only the 
 else: # The BLAST hits themselves are the haplotypes 
 	# Slice the hits plus some extra bases on the sides
 	slices = []
+
+	if args.tophit: 
+		if len(tabs) > 1: tabs = [tabs[0]] # Assume the first hit is the best one
 
 	for hit in tabs:
 		start = min(int(hit[8]), int(hit[9]))
