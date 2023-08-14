@@ -46,6 +46,15 @@ The scripts are made to either parse the BLAST output, filter it or modify it, o
 
 - `gtfRM2gff.py` - Script to transform the output of RepeatMasker (obtained with option `-gff` in RepeatMasker, which has a misleading name because it's a gtf) into a normal gff3. It also appends a color attribute to normal repeats (`-c`) and to simple repeats (`-s`) to be displayed in [The Integrative Genomics Viewer (IGV)](http://software.broadinstitute.org/software/igv/). 
 - `totalcovergff.py` - Script to obtained the merged coordinates of all models in gff file (eg. from RepeatMasker either the gtf or gff produced with `gtfRM2gff.py`). Basically it produces a bed file from the gff file with overlapping features merged. If only the gff is given, then it will collapse all the repeats into non-overlapping intervals. If an associated fasta file is also provided (`--fasta`), then it will calculate the total coverage of the contigs within that fasta annotated in the gff. Notice that the "bed" file produced is in the base of the input file (base 1 with gtf or gff files).
+
+Example: I have an SPAdes assembly of the strain PaZp (`PaZp.nice.fa`), with an annotation file of repeated elements called `PaZp.repeatmasker.gff3`. I want to know what percentage of the genome assembly is repeats. When I produced the assembly I aligned the contigs to a reference, so I assigned them to chromosomes or to the mitochondrion if it they were large enough. Hence, I can exclude the mitochondrial contig from this calcualtion by using the substring `_mt`.
+
+	$ python totalcovergff.py PaZp.repeatmasker.gff3 -f PaZp.nice.fa -E _mt | grep 'Total'
+	Total	35798243	1592917	4.450
+
+I used `grep 'Total'` because the script will print the values per contig too but I'm not interested in that. So 4.450% of this genome is annotated as repetitive elements. 
+ 
+
 - `MFannot4ncbi.oy` - The tbl output of [MFannot](https://www.frontiersin.org/articles/10.3389/fpls.2023.1222186/full) is too bare. This scripts attempts to make it closer to the desired tbl for [`table2asn`](https://www.ncbi.nlm.nih.gov/genbank/table2asn/), the NCBI script that produces sqn files for genome submission.
 
 I ran it as
