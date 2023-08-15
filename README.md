@@ -74,11 +74,11 @@ TODO
 ## Pylogenetics
 
 - `orthogrs2fasta.py` - Script to parse the *Orthogroups.csv* and *SingleCopyOrthogroups.txt* files produced by [OrthoFinder](https://github.com/davidemms/OrthoFinder) and to extract each orthogroup in a fasta file.
-- `orthogrs_parser.py` - Script to parse the *Orthogroups.csv* output file of [OrthoFinder](https://github.com/davidemms/OrthoFinder) and manage it for the *Podospora* project. Useful if you want to find orthogroups where all samples have a given number of orthologs (as defined by `--nugrps`). It can also return just sample of a given number of orghologs groups randomly (`--sample`). In addition, the script can look for certain type of orthogroups that I call "cool". An orthogroup is cool if:
+- `orthogrs_parser.py` - Script to parse the *Orthogroups.csv* output file of [OrthoFinder](https://github.com/davidemms/OrthoFinder) and manage it for the *Podospora* project. Useful if you want to find orthogroups where all samples have a given number of orthologs (as defined by `--nugrps`). It can also sample of a given number of orthologs groups randomly (`--sample`). In addition, the script can look for certain type of orthogroups that I call "cool". An orthogroup is cool if:
     
     * All species are represented
     * It excludes in-paralogs (duplications within species) that are only present in one species
-    * It includes groups of paralogs, but not the exact same number per species
+    * It includes groups of paralogs, but not all of the species/samples have to be represented in the clade of each paralog
 
 They are cool because, in theory, shared duplications (paralogs) are phylogenetically informative.
 
