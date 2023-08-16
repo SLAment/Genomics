@@ -29,7 +29,7 @@ import subprocess # For the database
 from shutil import rmtree # For removing directories
 import argparse # For the fancy options
 # ------------------------------------------------------
-version = 1.9
+version = 1.91
 versiondisplay = "{0:.2f}".format(version)
 
 # Make a nice menu for the user
@@ -162,7 +162,7 @@ if not args.blastab:
 	# BLAST
 	if args.seqid: # Only one sequence
 		outputhits = args.temp + "/" + queryseq.id + "VS" + nameref + "-" + "hits.tab"
-		query_string = '>' + queryseq.id + '\n' + str(queryseq.seq)
+		query_string = '>' + queryseq.id + '\n' + str(queryseq.seq.upper()) # the .upper() is to prevent weird behavior of BLAST with softmasked sequeces
 		blast_command = NcbiblastnCommandline(cmd='blastn', out=outputhits, outfmt=6, db=databasename, evalue=args.evalue, perc_identity=args.identity, num_threads=args.threads, task=args.task)
 		stdout, stderr = blast_command(stdin=query_string)
 	else: # Multifasta
