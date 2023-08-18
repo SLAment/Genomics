@@ -5,10 +5,14 @@
 
 # Transform a basic gff3 file to a simple tbl
 
+# version 1.3: Making genes and children partial is now not the default behavior, but it requires --partial. This is the case only for the startcodon, where a note is made instead (per NCBI requirements).
+
 # NOTE: The script can't deal with Ontology terms!
+# TODO: verified expected behavior with partial genes in minus strand (specially for the lack of stop codon)
+
 # ==================================================
 # Sandra Lorena Ament Velasquez
-# 2023/07/13
+# 2023/07/13 - 2023/08/18
 # +++++++++++++++++++++++++++++++++++++++++++++++++
 
 # ------------------------------------------------------
@@ -19,7 +23,7 @@ import gffutils
 from Bio import SeqIO
 # ------------------------------------------------------
 
-version = 1.21
+version = 1.3
 versiondisplay = "{0:.2f}".format(version)
 
 # ============================
@@ -33,6 +37,7 @@ parser.add_argument('gff', help="gff3 file")
 parser.add_argument('fasta', help="Fasta sequence of the mitochondrial genome")
 parser.add_argument('--mfannot', '-m', help="Follow the style of the MFannot tbl file regarding exons and intron", default=False, action='store_true')
 parser.add_argument("--code", "-c", help="Genetic code used for traslation (--proteinon) as an NCBI number. Default: 4", default=4, type=int)
+parser.add_argument("--partial", "-p", help="Make the ORFs without a startcodon partial. Default behavior is to make a note about the start codon (useful for NCBI submission of mt genomes with ORFs within introns, as complete mt genomes can't have partial genes).", default=False, action='store_true')
 
 # extras
 parser.add_argument('--version', '-v', action='version', version='%(prog)s ' + versiondisplay)
@@ -122,7 +127,7 @@ def printAttributes(feature): # like funannotate output
 		protein_id = f"gnl|ncbi|{feature.attributes['Parent'][0]}"
 		sys.stdout.write(f"\t\t\tprotein_id\t{protein_id}\n")
 
-for seqid in records_dict.keys():
+for seqid in records_dict.keys(): # For every contig in the assembly
 	genesinctg = [gene for gene in db.features_of_type("gene") if gene.chrom == seqid] # Get only the genes from this contig
 	ctgseq = records_dict[seqid]
 
@@ -143,7 +148,7 @@ for seqid in records_dict.keys():
 			print("The gene {gene.id} has no strand information!")
 			sys.exit(1)
 
-		## ---- Make partial genes ----
+		## ---- Make partial genes or add notes ----
 		partialstart = False
 		partialend = False
 
@@ -157,7 +162,7 @@ for seqid in records_dict.keys():
 
 				if startcodonseq not in startcodons_list:
 					partialstart = True
-					start = "<" + str(start)
+					if args.partial: start = "<" + str(start)
 
 				## ---- Check if the last codon is a stop codon ----
 				lastcds = cdschildren[len(cdschildren) - 1]
@@ -166,7 +171,8 @@ for seqid in records_dict.keys():
 				
 				if stopcodonseq not in stopcodons_list:
 					partialend = True
-					end = ">" + str(end)
+					end = ">" + str(end) # keep partial behavior in case the stop codon is missing
+					# if args.partial: end = ">" + str(end)
 
 			else:
 				## ---- Check if the last codon is a start codon ----
@@ -176,7 +182,7 @@ for seqid in records_dict.keys():
 				
 				if startcodonseq not in startcodons_list:
 					partialstart = True
-					start = ">" + str(start)
+					if args.partial: start = ">" + str(start)
 
 				## ---- Check if the first codon is a stop codon ----
 				lastcds = cdschildren[0]
@@ -185,7 +191,8 @@ for seqid in records_dict.keys():
 				
 				if stopcodonseq not in stopcodons_list:
 					partialend = True
-					end = "<" + str(end)
+					end = "<" + str(end) # keep partial behavior in case the stop codon is missing
+					# if args.partial: end = "<" + str(end)
 
 		## ------
 		## Gene body
@@ -217,9 +224,9 @@ for seqid in records_dict.keys():
 					start = children[0].start
 					end = children[0].end
 
-					if partialstart:
+					if partialstart and args.partial: 
 						start = "<" + str(start)
-					if partialend:
+					if partialend: # and args.partial: # keep partial behavior in case the stop codon is missing
 						end = ">" + str(end)
 
 					if childtype == "exon":
@@ -239,8 +246,10 @@ for seqid in records_dict.keys():
 					start = children[lastchild].end
 					end = children[lastchild].start
 
-					if partialstart:
+					if partialstart and args.partial:
 						start = ">" + str(start)
+					if partialend: # and args.partial: # NOT TESTED!!!! # keep partial behavior in case the stop codon is missing
+						end = "<" + str(end)
 
 					if childtype == "exon":
 						print(f"{start}\t{end}\t{mainchild.featuretype}") 
@@ -277,6 +286,8 @@ for seqid in records_dict.keys():
 			elif childtype == "CDS":
 				if mainchild.featuretype == 'mRNA': # not necessary for a rRNA
 					printAttributes(child)
+					if partialstart and not args.partial:
+						print(f"\t\t\tnote\tcontains a non-standard start codon {startcodonseq}")
 
 		# Print the exons and introns too if they exist
 		if args.mfannot:
