@@ -65,7 +65,7 @@ Where XXXX is the NCBI locus_tag, and 114110 is a number I chose to start the ge
 
 - `tbl2gff.py` - Experimental little script to transform a tbl file, like the one produced by `MFannot4ncbi.py`, into a gff3 file.
 
-- `gff3TOtbl.py` - A simple script to transform a basic gff3 to a tbl file, similar to the one produced by `MFannot4ncbi.py`. It can't handle multiple mRNA isoforms. This is ideal if you make manual curation into your gff3 and need to produce a tbl file again. I did this for the output of MFannot, so the script has a particular option to deal with the endonucleases and introns annotated by this program (they get annotated as mobile_element features).
+- `gff3TOtbl.py` - A simple script to transform a basic gff3 to a tbl file, similar to the one produced by `MFannot4ncbi.py`. It can't handle multiple mRNA isoforms. This is ideal if you make manual curation into your gff3 (as produced by `tbl2gff.py`, for example) and need to produce a tbl file again. I did this for the output of MFannot, so the script has a particular option to deal with the endonucleases and introns annotated by this program: they get annotated as mobile_element features. Otherwise they are treated like protein-coding genes (without `--mfannot`).
 
 It's ran like so:
 
