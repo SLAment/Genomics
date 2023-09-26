@@ -5,6 +5,7 @@
 
 # Transform a basic gff3 file to a simple tbl
 
+# version 1.4: I implemented detection on mobile_element features, and replaced the old behavior of --mfannot to emulate the style of MFannot tbl to instead transform the annotations of that program into a mobile_element feature.
 # version 1.3: Making genes and children partial is now not the default behavior, but it requires --partial. This is the case only for the startcodon, where a note is made instead (per NCBI requirements).
 
 # NOTE: The script can't deal with Ontology terms!
@@ -23,7 +24,7 @@ import gffutils
 from Bio import SeqIO
 # ------------------------------------------------------
 
-version = 1.3
+version = 1.4
 versiondisplay = "{0:.2f}".format(version)
 
 # ============================
@@ -35,7 +36,7 @@ parser = argparse.ArgumentParser(description="* Transform a gff3 file into a tbl
 # Add options
 parser.add_argument('gff', help="gff3 file")
 parser.add_argument('fasta', help="Fasta sequence of the mitochondrial genome")
-parser.add_argument('--mfannot', '-m', help="Follow the style of the MFannot tbl file regarding exons and intron", default=False, action='store_true')
+parser.add_argument('--mfannot', '-m', help="Expect annotation originally done with MFannot. This will transform annotated endonucleases and introns into mobile_element types.", default=False, action='store_true')
 parser.add_argument("--code", "-c", help="Genetic code used for traslation (--proteinon) as an NCBI number. Default: 4", default=4, type=int)
 parser.add_argument("--partial", "-p", help="Make the ORFs without a startcodon partial. Default behavior is to make a note about the start codon (useful for NCBI submission of mt genomes with ORFs within introns, as complete mt genomes can't have partial genes).", default=False, action='store_true')
 
@@ -193,130 +194,194 @@ for seqid in records_dict.keys(): # For every contig in the assembly
 					partialend = True
 					end = "<" + str(end) # keep partial behavior in case the stop codon is missing
 					# if args.partial: end = "<" + str(end)
+			# #  --- Testing ----
+			# if partialstart:
+			# 	print("PARTIALLLLLL")
 
-		## ------
-		## Gene body
-		print(f"{start}\t{end}\tgene")
-		if 'Name' in gene.attributes: # often genes have no name
-			if gene.attributes['Name'][0] != gene.attributes['ID'][0]: # ignore if they are the same
-				print(f"\t\t\tgene\t{gene.attributes['Name'][0]}")
-		print(f"\t\t\tlocus_tag\t{gene.id}")
-		printAttributes(gene)
-
-		# Now print the children
-		for child in list(db.children(gene, order_by='start', level = 1)): # determine the main type of children
-			if child.featuretype == "tRNA": # Then print attributes right away because there should be a single tRNA feature
-				print(f"{start}\t{end}\t{child.featuretype}")
-				printAttributes(child)
-			elif child.featuretype == "rRNA":
-				if list(db.children(gene, order_by='start', level = 2)) == []: # there are no introns within this rRNA
-					print(f"{start}\t{end}\t{child.featuretype}")
-			mainchild = child
-
-		listoffeatures = ['exon', 'CDS'] # similar to Funannotate's tbl files (remove 'exon' to have no 'mRNA' feature)
-
-		for childtype in listoffeatures:
-			children = [child for child in db.children(gene, featuretype=childtype, order_by='start')]
-
-			if children != []: # tRNA or rRNA might not have children
-				if gene.strand == '+':
-					# Print the first exon as an mRNA feature
-					start = children[0].start
-					end = children[0].end
-
-					if partialstart and args.partial: 
-						start = "<" + str(start)
-					if partialend: # and args.partial: # keep partial behavior in case the stop codon is missing
-						end = ">" + str(end)
-
-					if childtype == "exon":
-						print(f"{start}\t{end}\t{mainchild.featuretype}") 
-					elif childtype == "CDS":
-						print(f"{start}\t{end}\tCDS")
-
-					# The rest of the exons are just the coordinates
-					for exon in children[1:]:
-						start = exon.start
-						end = exon.end
-						print(f"{start}\t{end}") 
-
-				elif gene.strand == '-':
-					lastchild = len(children) - 1
-					# Print the first exon as an mRNA feature
-					start = children[lastchild].end
-					end = children[lastchild].start
-
-					if partialstart and args.partial:
-						start = ">" + str(start)
-					if partialend: # and args.partial: # NOT TESTED!!!! # keep partial behavior in case the stop codon is missing
-						end = "<" + str(end)
-
-					if childtype == "exon":
-						print(f"{start}\t{end}\t{mainchild.featuretype}") 
-					elif childtype == "CDS":
-						print(f"{start}\t{end}\tCDS") 
-
-					# The rest of the exons are just the coordinates
-					childindexes = list(reversed(range(0,len(children))))
-					for ind in childindexes[1:]: # Exclude the last exon
-						exon = children[ind]
-						start = exon.start
-						end = exon.end
-						print(f"{end}\t{start}") 
-
-			#  --- Print attributes ---
-			if childtype == "exon":
-				if mainchild.featuretype != 'tRNA': # tRNA was printed above	
-					if "protein_id" not in child.attributes or "transcript_id" not in child.attributes:	
-						if "product" in child.attributes:
-							print(f"\t\t\tproduct\t{mainchild.attributes['product'][0]}")
-						
-						if mainchild.featuretype != 'rRNA':
-							protein_id = f"gnl|ncbi|{mainchild.attributes['Parent'][0]}"
-							transcript_id = f"gnl|ncbi|{mainchild.attributes['ID'][0]}"
-							sys.stdout.write(f"\t\t\ttranscript_id\t{transcript_id}\n")
-							sys.stdout.write(f"\t\t\tprotein_id\t{protein_id}\n")
-					else:
-						for attri in child.attributes:
-							if attri in ["transcript_id", "protein_id"] and mainchild.featuretype != 'rRNA':
-								print(f"\t\t\t{attri}\tgnl|ncbi|{child.attributes[attri][0]}")
-							elif attri == "product":
-								print(f"\t\t\t{attri}\t{child.attributes[attri][0]}")
-
-			elif childtype == "CDS":
-				if mainchild.featuretype == 'mRNA': # not necessary for a rRNA
-					printAttributes(child)
-					if partialstart and not args.partial:
-						print(f"\t\t\tnote\tcontains a non-standard start codon {startcodonseq}")
-
-		# Print the exons and introns too if they exist
+		## ---- MFannot will mark some features of homing endonucleases ---
+		# the notes are normally associated to the mRNA
+		transposon = False
 		if args.mfannot:
-			# Exons
-			exonlist = [child for child in db.children(gene, featuretype='exon', order_by='start') if 'orf' not in gene.attributes['Name'][0]]
-			count = 0
-			# if gene.id == "QC761_0114485": print("hola", [child for child in db.children(gene, order_by='start')])
-			for exon in exonlist:
-				count += 1
-				if gene.strand == '+':
-					start = exon.start
-					end = exon.end
-				else:
-					start = exon.end
-					end = exon.start					
-				print(f"{exon.start}\t{exon.end}\texon")
-				print(f"\t\t\tnumber\t{count}")
+			children = [child for child in db.children(gene, featuretype='mRNA', order_by='start')]
+			for child in children: # there might be more than one mRNA
+				if 'note' in child.attributes:
+					if 'LAGLIDADG' in child['note']: # As the notes made by MFannot and appended by my script MFannot4ncbi.py
+						transposon = True
+						TEtype = 'other:LAGLIDADG homing endonuclease'
+					elif child['note'] == ['GIY']: 
+						transposon = True
+						TEtype = 'other:GIY-YIG endonuclease'
+					elif 'Group' in child['note'][0]: # if this is in a mRNA and not an intron feature, I probably added it manually myself
+						transposon = True
+						TEtype = f"other:{child['note'][0]} intron"
 
-			# Introns
-			intronlist = [child for child in db.children(gene, featuretype='intron', order_by='start')]
-			for intron in intronlist:
-				if gene.strand == '+':
-					start = intron.start
-					end = intron.end
-				else:
-					start = intron.end
-					end = intron.start					
-				print(f"{intron.start}\t{intron.end}\tintron")
-				printAttributes(intron)
+		# I cannot treat these guys as normal genes because NCBI freaks out.
+		# They usually lack start codons and are sitting within gene introns
+		# (or they are the introns), which is also not of NCBI's liking.		
+		## ------
+		
+		if transposon and args.mfannot:
+			# https://www.ncbi.nlm.nih.gov/genbank/eukaryotic_genome_submission_examples/#fig2
+			# https://www.ncbi.nlm.nih.gov/genbank/genomesubmit_annotation/
+			print(f"{start}\t{end}\tmobile_element")
+			print(f"\t\t\tmobile_element_type\t{TEtype}")
+
+		# Qualifier       /mobile_element_type=
+		# Definition      type and name or identifier of the mobile element which is
+		#                 described by the parent feature
+		# Value format    "<mobile_element_type>[:<mobile_element_name>]" where
+		#                 mobile_element_type is one of the following:
+		#                 "transposon", "retrotransposon", "integron",
+		#                 "insertion sequence", "non-LTR retrotransposon",
+		#                 "SINE", "MITE", "LINE", "other".
+		# Example         /mobile_element_type="transposon:Tnp9"
+		# Comment         /mobile_element_type is legal on mobile_element feature key only.
+		#                 Mobile element should be used to represent both elements which
+		#                 are currently mobile, and those which were mobile in the past.
+		#                 Value "other" requires a mobile_element_name.
+
+		else: # A normal protein-coding gene, rDNA, tRNA
+			## Gene body
+			print(f"{start}\t{end}\tgene")
+			if 'Name' in gene.attributes: # often genes have no name
+				if gene.attributes['Name'][0] != gene.attributes['ID'][0]: # ignore if they are the same
+					print(f"\t\t\tgene\t{gene.attributes['Name'][0]}")
+			print(f"\t\t\tlocus_tag\t{gene.id}")
+			printAttributes(gene)
+
+			# Now print the children
+			for child in list(db.children(gene, order_by='start', level = 1)): # determine the main type of children
+				if child.featuretype == "tRNA": # Then print attributes right away because there should be a single tRNA feature
+					print(f"{start}\t{end}\t{child.featuretype}")
+					printAttributes(child)
+				elif child.featuretype == "rRNA":
+					if list(db.children(gene, order_by='start', level = 2)) == []: # there are no introns within this rRNA
+						print(f"{start}\t{end}\t{child.featuretype}")
+				mainchild = child
+
+			listoffeatures = ['exon', 'CDS'] # similar to Funannotate's tbl files (remove 'exon' to have no 'mRNA' feature)
+
+			for childtype in listoffeatures:
+				children = [child for child in db.children(gene, featuretype=childtype, order_by='start')]
+
+				if children != []: # tRNA or rRNA might not have children
+					if gene.strand == '+':
+						# Print the first exon as an mRNA feature
+						start = children[0].start
+						end = children[0].end
+
+						if partialstart and args.partial: 
+							start = "<" + str(start)
+						if partialend: # and args.partial: # keep partial behavior in case the stop codon is missing
+							end = ">" + str(end)
+
+						if childtype == "exon":
+							print(f"{start}\t{end}\t{mainchild.featuretype}") 
+						elif childtype == "CDS":
+							print(f"{start}\t{end}\tCDS")
+
+						# The rest of the exons are just the coordinates
+						for exon in children[1:]:
+							start = exon.start
+							end = exon.end
+							print(f"{start}\t{end}") 
+
+					elif gene.strand == '-':
+						lastchild = len(children) - 1
+						# Print the first exon as an mRNA feature
+						start = children[lastchild].end
+						end = children[lastchild].start
+
+						if partialstart and args.partial:
+							start = ">" + str(start)
+						if partialend: # and args.partial: # NOT TESTED!!!! # keep partial behavior in case the stop codon is missing
+							end = "<" + str(end)
+
+						if childtype == "exon":
+							print(f"{start}\t{end}\t{mainchild.featuretype}") 
+						elif childtype == "CDS":
+							print(f"{start}\t{end}\tCDS") 
+
+						# The rest of the exons are just the coordinates
+						childindexes = list(reversed(range(0,len(children))))
+						for ind in childindexes[1:]: # Exclude the last exon
+							exon = children[ind]
+							start = exon.start
+							end = exon.end
+							print(f"{end}\t{start}") 
+
+				#  --- Print attributes ---
+				if childtype == "exon":
+					if mainchild.featuretype != 'tRNA': # tRNA was printed above	
+						if "protein_id" not in child.attributes or "transcript_id" not in child.attributes:	
+							if "product" in child.attributes:
+								print(f"\t\t\tproduct\t{mainchild.attributes['product'][0]}")
+							
+							if mainchild.featuretype != 'rRNA':
+								protein_id = f"gnl|ncbi|{mainchild.attributes['Parent'][0]}"
+								transcript_id = f"gnl|ncbi|{mainchild.attributes['ID'][0]}"
+								sys.stdout.write(f"\t\t\ttranscript_id\t{transcript_id}\n")
+								sys.stdout.write(f"\t\t\tprotein_id\t{protein_id}\n")
+						else:
+							for attri in child.attributes:
+								if attri in ["transcript_id", "protein_id"] and mainchild.featuretype != 'rRNA':
+									print(f"\t\t\t{attri}\tgnl|ncbi|{child.attributes[attri][0]}")
+								elif attri == "product":
+									print(f"\t\t\t{attri}\t{child.attributes[attri][0]}")
+
+				elif childtype == "CDS":
+					if mainchild.featuretype == 'mRNA': # not necessary for a rRNA
+						printAttributes(child)
+						if partialstart and not args.partial:
+							print(f"\t\t\tnote\tcontains a non-standard start codon {startcodonseq}")
+
+			# Some of the introns will be also endonucleases, without annotated orfs. Make these mobile_element features too.
+			if args.mfannot:
+				# Introns
+				intronlist = [child for child in db.children(gene, featuretype='intron', order_by='start')]
+				for intron in intronlist:
+					if gene.strand == '+':
+						start = intron.start
+						end = intron.end
+					else:
+						start = intron.end
+						end = intron.start
+					if 'note' in intron.attributes:
+						if 'Group' in intron['note'][0]: # As the notes made by MFannot and appended by my script MFannot4ncbi.py
+							TEtype = f"other:{intron['note'][0]} intron"
+							print(f"{start}\t{end}\tmobile_element")
+							print(f"\t\t\tmobile_element_type\t{TEtype}")
+
+
+			# ## --- Older version matching MFannot stype ---
+			# # Print the exons and introns too if they exist
+			# if args.mfannot:
+			# 	# Exons
+			# 	exonlist = [child for child in db.children(gene, featuretype='exon', order_by='start') if 'orf' not in gene.attributes['Name'][0]]
+			# 	count = 0
+			# 	# if gene.id == "QC761_0114485": print("hola", [child for child in db.children(gene, order_by='start')])
+			# 	for exon in exonlist:
+			# 		count += 1
+			# 		if gene.strand == '+':
+			# 			start = exon.start
+			# 			end = exon.end
+			# 		else:
+			# 			start = exon.end
+			# 			end = exon.start					
+			# 		print(f"{exon.start}\t{exon.end}\texon")
+			# 		print(f"\t\t\tnumber\t{count}")
+
+			# 	# Introns
+			# 	intronlist = [child for child in db.children(gene, featuretype='intron', order_by='start')]
+			# 	for intron in intronlist:
+			# 		if gene.strand == '+':
+			# 			start = intron.start
+			# 			end = intron.end
+			# 		else:
+			# 			start = intron.end
+			# 			end = intron.start					
+			# 		print(f"{intron.start}\t{intron.end}\tintron")
+			# 		printAttributes(intron)
 				
 
 
