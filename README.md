@@ -55,17 +55,26 @@ Example: I have an SPAdes assembly of the strain PaZp (`PaZp.nice.fa`), with an 
 I used `grep 'Total'` because the script will print the values per contig too but I'm not interested in that. So 4.450% of this genome is annotated as repetitive elements. 
  
 
-- `MFannot4ncbi.oy` - The tbl output of [MFannot](https://www.frontiersin.org/articles/10.3389/fpls.2023.1222186/full) is too bare. This scripts attempts to make it closer to the desired tbl for [`table2asn`](https://www.ncbi.nlm.nih.gov/genbank/table2asn/), the NCBI script that produces sqn files for genome submission.
+- `MFannot4ncbi.py` - The tbl output of [MFannot](https://www.frontiersin.org/articles/10.3389/fpls.2023.1222186/full) is too bare. This scripts attempts to make it closer to the desired tbl for [`table2asn`](https://www.ncbi.nlm.nih.gov/genbank/table2asn/), the NCBI script that produces sqn files for genome submission.
 
 I ran it as
 
-	% ./MFannot4ncbi.py mfannot_output.fasta.new.tbl MyMtContig.fa -l XXXX -s 10 -n 114110 > MyMtContig.tbl
+	$ ./MFannot4ncbi.py mfannot_output.fasta.new.tbl MyMtContig.fa -l XXXX -s 10 -n 114110 > MyMtContig.tbl
 
 Where XXXX is the NCBI locus_tag, and 114110 is a number I chose to start the gene codes for all the genes in the mitochondrial contig. This could be 1, or whatever you want, but if you already have nuclear genome contigs with numbers, you can continue those numbers for your mitochondrial contig.
 
 - `tbl2gff.py` - Experimental little script to transform a tbl file, like the one produced by `MFannot4ncbi.py`, into a gff3 file.
 
-- `gff3TOtbl.py` - A simple script to transform a basic gff3 to a tbl file, similar to the one produced by `MFannot4ncbi.py`. It can't handle multiple mRNA isoforms.
+- `gff3TOtbl.py` - A simple script to transform a basic gff3 to a tbl file, similar to the one produced by `MFannot4ncbi.py`. It can't handle multiple mRNA isoforms. This is ideal if you make manual curation into your gff3 and need to produce a tbl file again. I did this for the output of MFannot, so the script has a particular option to deal with the endonucleases and introns annotated by this program (they get annotated as mobile_element features).
+
+It's ran like so:
+
+	$ ./gff3TOtbl.py NyNewAnnotation.gff3 MyMtContig.fa --mfannot > NyNewAnnotation.tbl
+
+The script can also make features partial, although this require testing. Notice that NCBI won't accept partial features in fully assembled mitochondrial genomes.
+
+	$ ./gff3TOtbl.py NyNewAnnotation.gff3 MyMtContig.fa --mfannot --partial > NyNewAnnotation.tbl
+
 
 ## Miscellaneous
 
