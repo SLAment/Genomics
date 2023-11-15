@@ -8,6 +8,7 @@
 # genome. If the --haplo option is used, then it searches for a haplotype
 # instead.
 
+# version 1.92 - added option nocoords to preserve the original contig names if needed
 # version 1.9 - added option tophit (but not for --haplo) and fixed the script for python3
 # version 1.8 - created option addquery
 # version 1.7 - changed the behavior of --self and --noself to check if the output matches the queries
@@ -29,7 +30,7 @@ import subprocess # For the database
 from shutil import rmtree # For removing directories
 import argparse # For the fancy options
 # ------------------------------------------------------
-version = 1.91
+version = 1.92
 versiondisplay = "{0:.2f}".format(version)
 
 # Make a nice menu for the user
@@ -52,6 +53,7 @@ parser.add_argument("--minhaplo", "-m", help="Minimum size of haplotype size (de
 parser.add_argument("--makegff", "-g", help="Print a simple gff3 file with the output hits too", default=False, action='store_true')
 parser.add_argument("--addquery", "-q", help="Print the query along with the BLAST results", default=False, action='store_true')
 parser.add_argument("--tophit", "-x", help="Slice only the first, top hit of the BLAST search (won't work with --haplo)", default=False, action='store_true')
+parser.add_argument("--nocoords", "-0", help="Do not append coordinates of slices into the sequences names", default=False, action='store_true')
 
 # Make a mutualy-exclusive group
 selfgroup = parser.add_mutually_exclusive_group()
@@ -237,9 +239,13 @@ if args.haplo: # We are looking for entire haplotypes and the blast is only the 
 
 				# Slice it 
 				slice = hitseq[start_final:end_final]
-				# Rename it so it's nice
-				slice.id = hitseq.id + "_" + str(start_final + 1) + "-" + str(end_final)
-				# slice.id = hitseq.id + "_Slice_" + str(start_final + 1) + "-" + str(end_final)
+				
+				if args.nocoords:
+					slice.id = hitseq.id 
+				else:# Rename it so it's nice
+					slice.id = hitseq.id + "_" + str(start_final + 1) + "-" + str(end_final)
+					# slice.id = hitseq.id + "_Slice_" + str(start_final + 1) + "-" + str(end_final)
+				
 				slice.description = ''
 				# Save it in the list
 				slices.append(slice)
@@ -275,8 +281,12 @@ else: # The BLAST hits themselves are the haplotypes
 		if (abs(start_final - end_final) >= args.minsize):	# (abs(start_final - end_final) <= args.vicinity) and 
 			# Slice it 
 			slice = hitseq[start_final:end_final]
-			# Rename it so it's nice
-			slice.id = hitseq.id + "_" + str(start_final + 1) + "-" + str(end_final)
+
+			if args.nocoords:
+				slice.id = hitseq.id 
+			else:# Rename it so it's nice
+				slice.id = hitseq.id + "_" + str(start_final + 1) + "-" + str(end_final)
+
 			# slice.id = hitseq.id + "_Slice_" + str(start_final + 1) + "-" + str(end_final)
 			slice.description = ''
 			# Save it in the list
