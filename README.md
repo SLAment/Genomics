@@ -5,6 +5,8 @@ I often use [conda](https://docs.conda.io/projects/conda/en/latest/) to install 
 
     $ conda create -n bioinformatics blast=2.9.0 biopython=1.78 gffutils=0.10.1 -c bioconda
 
+(The BLAST scripts below have been tested and work well with BLAST 2.15.0+, biopython 1.81 and gffutils 0.12).
+
 Then I activate my environment:
 
     $ conda activate bioinformatics
