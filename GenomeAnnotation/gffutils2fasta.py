@@ -23,6 +23,7 @@
 
 
 ## VERSION notes
+# version 2.2 - Added new opton to report all the sequences in the coding sense --insense
 # version 2.1 - The database can now take rRNA as a type
 # version 2.0 - The database can now take tRNA as a type; the script no longer assumes mRNA is the first level child of gene
 # version 1.9 - Now using --onlyids and --onlynames at the same time leads to a combined name
@@ -43,7 +44,7 @@ import re
 import gffutils
 # ------------------------------------------------------
 
-version = 2.10
+version = 2.20
 versiondisplay = "{0:.2f}".format(version)
 supportedtypes = ["gene", "CDS", "cds", "exon", "noutrs", "similarity", "expressed_sequence_match", "repeat", "pseudogene"] # Unlike the CDS, Exons may contain the UTRs; noutrs is from start to stop codon without introns in nuleotides
 
@@ -65,6 +66,8 @@ parser.add_argument("--onlyids", "-n", help="Only keep the name of the gene ID i
 parser.add_argument("--onlynames", "-N", help="Only keep the name of the gene in the output", default=False, action='store_true')
 parser.add_argument("--mRNAids", "-r", help="Use the mRNA ID instead of the gene ID in the output (only for CDS)", default=False, action='store_true')
 parser.add_argument("--code", "-c", help="Genetic code used for traslation (--proteinon) as an NCBI number. Default: 1", default=1, type=int)
+
+parser.add_argument("--insense", "-s", help="Report all the sequences in the coding sense (experimental!)", default=1, type=int)
 
 # # parser.add_argument("--appendtoname", "-a", help="Append string to the sequence names", default='') # Maybe one day
 # # parser.add_argument("--othertype", "-t", help="The feature you want to extract, with your own name", default=NULL) # One day
@@ -420,6 +423,10 @@ else:
 							# Edit Seq object to have the same names again
 							child_concat.id = seq_record.id
 							child_concat.description = seq_record.description
+
+					elif args.insense: # It's not a protein but make it in the right sense
+						if strand == '-':
+							child_concat = child_concat[:len(child_concat) - phase].reverse_complement()
 
 					if args.mRNAids:
 						child_concat = seqnamer(childID, genename, child_concat, typeseq = args.type) # Update the naming of the sequence
