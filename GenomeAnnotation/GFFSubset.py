@@ -90,16 +90,16 @@ def printgene(gene):
 # Print a header
 print("##gff-version 3")
 now = datetime.datetime.now()
-print(f'# Subset of {args.GFF} extracted with GFFSubset.py v. {versiondisplay} on {now}')
+print(f'# Subset of {args.GFF} extracted with GFFSubset.py v. {versiondisplay} on {now}')
 
 
-# Parse the gene IDs:
+# Parse the gene IDs:
 for strid in geneids:
-	try: # Try as IDs:
+	try: # Try as IDs:
 		gene = db[strid]
 		printgene(gene)
 
-	except: # Then try gene Name
+	except: # Then try gene Name
 		# Sometimes the same gene is there for different features
 		for gene in db.features_of_type('gene'): # Loop in the database until you find it
 			genename = gene['Name'][0] # same as gene.attributes['Name'][0]
