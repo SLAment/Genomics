@@ -89,7 +89,6 @@ def namebase(file):
 def makeBLASTdb(fasta, databasename, dbtype):
 	# databasename = name + '_db/' + name + '_db' # Name of the database
 	createdb = f"makeblastdb -in {fasta} -out {databasename} -dbtype {dbtype} -parse_seqids" # BLAST command
-	print(createdb)
 	process = subprocess.Popen(createdb.split(), stdout=subprocess.PIPE) # pipe the command to the shell
 	stdout, stderr = process.communicate() # run it
 
@@ -125,7 +124,6 @@ databasename = args.temp + nameref + '_db/' + nameref + '_db'
 if not os.path.isdir(args.temp + nameref + '_db/'): # If it exist already, don't bother
 	makeBLASTdb(args.assembly, databasename, 'nucl')
 
-print(databasename)
 # BLAST
 if args.seqid: # Only one sequence
 	outputhits = args.temp + queryseq.id + "VS" + nameref + "-" + "hits.tab"
