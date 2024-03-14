@@ -8,6 +8,7 @@
 # genome. If the --haplo option is used, then it searches for a haplotype
 # instead.
 
+# version 2.0 - The script can now do tblastn!
 # version 1.92 - added option nocoords to preserve the original contig names if needed
 # version 1.9 - added option tophit (but not for --haplo) and fixed the script for python3
 # version 1.8 - created option addquery
@@ -18,7 +19,7 @@
 # ==================================================
 # Sandra Lorena Ament Velasquez
 # Johannesson Lab, Evolutionary Biology Center, Uppsala University, Sweden
-# 2019/05/23, 2021/06/11
+# 2019/05/23, 2021/06/11, 2024/03/14
 # +++++++++++++++++++++++++++++++++++++++++++++++++
 
 # ------------------------------------------------------
@@ -30,7 +31,7 @@ import subprocess # For the database
 from shutil import rmtree # For removing directories
 import argparse # For the fancy options
 # ------------------------------------------------------
-version = 1.92
+version = 2.00
 versiondisplay = "{0:.2f}".format(version)
 
 # Make a nice menu for the user
@@ -165,11 +166,19 @@ if not args.blastab:
 	if args.seqid: # Only one sequence
 		outputhits = args.temp + "/" + queryseq.id + "VS" + nameref + "-" + "hits.tab"
 		query_string = '>' + queryseq.id + '\n' + str(queryseq.seq.upper()) # the .upper() is to prevent weird behavior of BLAST with softmasked sequeces
-		blast_command = NcbiblastnCommandline(cmd='blastn', out=outputhits, outfmt=6, db=databasename, evalue=args.evalue, perc_identity=args.identity, num_threads=args.threads, task=args.task)
+		
+		if args.task == 'tblastn':
+			blast_command = NcbitblastnCommandline(cmd='tblastn', out=outputhits, outfmt=6, db=databasename, evalue=args.evalue, num_threads=args.threads, task=args.task)
+		else:
+			blast_command = NcbiblastnCommandline(cmd='blastn', out=outputhits, outfmt=6, db=databasename, evalue=args.evalue, perc_identity=args.identity, num_threads=args.threads, task=args.task)
 		stdout, stderr = blast_command(stdin=query_string)
 	else: # Multifasta
 		outputhits = args.temp + "/" + nameqry + "VS" + nameref + "-" + "hits.tab"
-		blast_command = NcbiblastnCommandline(query=args.query, cmd='blastn', out=outputhits, outfmt=6, db=databasename, evalue=args.evalue, perc_identity=args.identity, num_threads=args.threads, task=args.task)
+
+		if args.task == 'tblastn':
+			blast_command = NcbitblastnCommandline(query=args.query, cmd='tblastn', out=outputhits, outfmt=6, db=databasename, evalue=args.evalue, num_threads=args.threads, task=args.task)
+		else:
+			blast_command = NcbiblastnCommandline(query=args.query, cmd='blastn', out=outputhits, outfmt=6, db=databasename, evalue=args.evalue, perc_identity=args.identity, num_threads=args.threads, task=args.task)
 		stdout, stderr = blast_command()
 
 	# Read back
