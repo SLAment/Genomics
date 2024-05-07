@@ -8,6 +8,7 @@
 # genome. If the --haplo option is used, then it searches for a haplotype
 # instead.
 
+# version 2.1 - Removed the use of the Bio.Blast.Applications module (which got depricated) in favor of using subprocess.
 # version 2.0 - The script can now do tblastn!
 # version 1.92 - added option nocoords to preserve the original contig names if needed
 # version 1.9 - added option tophit (but not for --haplo) and fixed the script for python3
@@ -26,12 +27,12 @@
 import os # For the input name
 import sys
 from Bio import SeqIO
-from Bio.Blast.Applications import * # NCBI BLASTX wrapper from the Bio.Blast.Applications module
 import subprocess # For the database
+import tempfile # To make a temporary file for single sequences
 from shutil import rmtree # For removing directories
 import argparse # For the fancy options
 # ------------------------------------------------------
-version = 2.00
+version = 2.1
 versiondisplay = "{0:.2f}".format(version)
 
 # Make a nice menu for the user
@@ -42,7 +43,7 @@ parser.add_argument('assembly', help="Fasta file to extract from")
 parser.add_argument('query', help="Fasta file of the query sequence(s) in nucleotides")
 # BLAST options
 parser.add_argument("--haplo", "-H", help="Use sequence(s) in query to try to extract haplotypes instead", default=False, action='store_true')
-parser.add_argument("--task", "-T", help="Task for the blastn program. Default is 'blastn', other options are 'blastn-short', 'dc-megablast', 'megablast' or 'vecscreen'", type=str, default="blastn")
+parser.add_argument("--task", "-T", help="Task for the blastn program. Default is 'blastn', other options are 'tblastn', 'blastn-short', 'dc-megablast', 'megablast' or 'vecscreen'", type=str, default="blastn")
 parser.add_argument("--evalue", "-e", help="Minimum e-value of BLAST hit to be considered (default 0.00001)", type=float, default=0.00001)
 parser.add_argument("--identity", "-i", help="Minimum percentage of identity of BLAST hit to be considered (default 0)", type=float, default=0)
 # More filtering options
@@ -141,6 +142,7 @@ if args.seqid:
 	if len(matching) != 0: # Make sure there is a match
 		# print(matching)
 		queryseq = query_dict[matching[0]]
+		queryseq.seq.upper()
 		# queryseq = query_dict[args.seqid]
 	else:
 		print("\tNo match for " + args.seqid + "! Exiting ...")
@@ -163,23 +165,29 @@ if not args.blastab:
 		makeBLASTdb(args.assembly, databasename, 'nucl')
 
 	# BLAST
+	if args.task in ['blastn-short', 'dc-megablast', 'megablast', 'vecscreen']: 
+		args.task = "blastn -task {args.task}"
+
 	if args.seqid: # Only one sequence
 		outputhits = args.temp + "/" + queryseq.id + "VS" + nameref + "-" + "hits.tab"
-		query_string = '>' + queryseq.id + '\n' + str(queryseq.seq.upper()) # the .upper() is to prevent weird behavior of BLAST with softmasked sequeces
-		
-		if args.task == 'tblastn':
-			blast_command = NcbitblastnCommandline(cmd='tblastn', out=outputhits, outfmt=6, db=databasename, evalue=args.evalue, num_threads=args.threads, task=args.task)
-		else:
-			blast_command = NcbiblastnCommandline(cmd='blastn', out=outputhits, outfmt=6, db=databasename, evalue=args.evalue, perc_identity=args.identity, num_threads=args.threads, task=args.task)
-		stdout, stderr = blast_command(stdin=query_string)
+
+		# Make a temporary file for the fasta file with a single sequence and BLAST it
+		with tempfile.NamedTemporaryFile(mode="w", delete=True) as tempquery:
+			SeqIO.write(queryseq, tempquery, "fasta")
+			tempquery.flush() # important to flush the data because the file might not be closed immediately after writing to it
+
+			blast_command = f"{args.task} -db {databasename} -query {tempquery.name} -out {outputhits} -outfmt 6 -evalue {args.evalue} -num_threads {args.threads} -perc_identity {args.identity}"
+			print(blast_command)
+			process = subprocess.Popen(blast_command.split(), stdout=subprocess.PIPE) # pipe the command to the shell
+			stdout, stderr = process.communicate() # run it
+
 	else: # Multifasta
 		outputhits = args.temp + "/" + nameqry + "VS" + nameref + "-" + "hits.tab"
 
-		if args.task == 'tblastn':
-			blast_command = NcbitblastnCommandline(query=args.query, cmd='tblastn', out=outputhits, outfmt=6, db=databasename, evalue=args.evalue, num_threads=args.threads, task=args.task)
-		else:
-			blast_command = NcbiblastnCommandline(query=args.query, cmd='blastn', out=outputhits, outfmt=6, db=databasename, evalue=args.evalue, perc_identity=args.identity, num_threads=args.threads, task=args.task)
-		stdout, stderr = blast_command()
+		blast_command = f"{args.task} -db {databasename} -query {args.query} -out {outputhits} -outfmt 6 -evalue {args.evalue} -num_threads {args.threads} -perc_identity {args.identity}"
+
+		process = subprocess.Popen(blast_command.split(), stdout=subprocess.PIPE) # pipe the command to the shell
+		stdout, stderr = process.communicate() # run it
 
 	# Read back
 	tabs = [line.rstrip("\n").split("\t") for line in open(outputhits, 'r')] 			# Read tab file into a list
