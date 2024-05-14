@@ -8,6 +8,7 @@
 # genome. If the --haplo option is used, then it searches for a haplotype
 # instead.
 
+# version 2.21 - Added --color option
 # version 2.2 - Fixed a mistake with the tasks and with the treatment of tblastn
 # version 2.1 - Removed the use of the Bio.Blast.Applications module (which got depricated) in favor of using subprocess.
 # version 2.0 - The script can now do tblastn!
@@ -33,7 +34,7 @@ import tempfile # To make a temporary file for single sequences
 from shutil import rmtree # For removing directories
 import argparse # For the fancy options
 # ------------------------------------------------------
-version = 2.2
+version = 2.21
 versiondisplay = "{0:.2f}".format(version)
 
 # Make a nice menu for the user
@@ -53,7 +54,8 @@ parser.add_argument("--minsize", "-s", help="Minimum size of BLAST hit to be con
 parser.add_argument("--vicinity", "-c", help="Max distance between 5 and 3 end hits to form a haplotype (default 10000 bp)", type=int, default=10000)
 parser.add_argument("--minhaplo", "-m", help="Minimum size of haplotype size (default 0 bp)", type=int, default=0)
 # Other useful things
-parser.add_argument("--makegff", "-g", help="Print a simple gff3 file with the output hits too", default=False, action='store_true')
+parser.add_argument("--makegff", "-g", help="Print a simple GFF3 file with the output hits too", default=False, action='store_true')
+parser.add_argument('--color', '-l', help="HEX code for the color of the features in the GFF3 file, default #000000 (black)", default='#000000', type = str)
 parser.add_argument("--addquery", "-q", help="Print the query along with the BLAST results", default=False, action='store_true')
 parser.add_argument("--tophit", "-x", help="Slice only the first, top hit of the BLAST search (won't work with --haplo)", default=False, action='store_true')
 parser.add_argument("--nocoords", "-0", help="Do not append coordinates of slices into the sequences names", default=False, action='store_true')
@@ -207,6 +209,9 @@ if args.makegff:
 	gfffile.write("##gff-version 3\n")
 	hitsdic = {}
 
+	idcount = 1
+
+
 
 if args.haplo: # We are looking for entire haplotypes and the blast is only the edges
 	chunks = {}
@@ -272,7 +277,7 @@ if args.haplo: # We are looking for entire haplotypes and the blast is only the 
 				slices.append(slice)
 
 				if args.makegff:
-					gfffile.write(f"{hitseq.id}\tBLASTn\tsimilarity\t{start_final + 1}\t{end_final}\t.\t.\t.\tID=haplo{chunkcount};color=#000000;\n")
+					gfffile.write(f"{hitseq.id}\tBLASTn\tsimilarity\t{start_final + 1}\t{end_final}\t.\t.\t.\tID=haplo{chunkcount};color={args.color};\n")
 					# query_dict
 
 else: # The BLAST hits themselves are the haplotypes 
@@ -318,8 +323,10 @@ else: # The BLAST hits themselves are the haplotypes
 				# 	hitsdic[hitseq.id] += 1
 				# else:
 				# 	hitsdic[hitseq.id] = 1
-				# gfffile.write(f"{hitseq.id}\tBLASTn\tsimilarity\t{start_final + 1}\t{end_final}\t.\t.\t.\tID={hit[0]}_{hitsdic[hitseq.id]};Name={hit[0]};eval={hit[10]};identity={hit[2]};length={len(slice)};color=#000000;\n")
-				gfffile.write(f"{hitseq.id}\tBLASTn\tsimilarity\t{start_final + 1}\t{end_final}\t.\t.\t.\tID={hit[0]};Name={hit[0]};eval={hit[10]};identity={hit[2]};length={len(slice)};color=#000000;\n")
+				# gfffile.write(f"{hitseq.id}\tBLASTn\tsimilarity\t{start_final + 1}\t{end_final}\t.\t.\t.\tID={hit[0]}_{hitsdic[hitseq.id]:03d};Name={hit[0]};eval={hit[10]};identity={hit[2]};length={len(slice)};color=#000000;\n")
+				
+				idcount +=1
+				gfffile.write(f"{hitseq.id}\tBLASTn\tsimilarity\t{start_final + 1}\t{end_final}\t.\t.\t.\tID={hit[0]}_{idcount:03d};Name={hit[0]};eval={hit[10]};identity={hit[2]};length={len(slice)};color={args.color};\n")
 
 if args.noself: # Print only sequences that are different from the queries
 	for seq in query_dict:
