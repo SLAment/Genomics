@@ -8,6 +8,7 @@
 # genome. If the --haplo option is used, then it searches for a haplotype
 # instead.
 
+# version 2.2 - Fixed a mistake with the tasks and with the treatment of tblastn
 # version 2.1 - Removed the use of the Bio.Blast.Applications module (which got depricated) in favor of using subprocess.
 # version 2.0 - The script can now do tblastn!
 # version 1.92 - added option nocoords to preserve the original contig names if needed
@@ -32,7 +33,7 @@ import tempfile # To make a temporary file for single sequences
 from shutil import rmtree # For removing directories
 import argparse # For the fancy options
 # ------------------------------------------------------
-version = 2.1
+version = 2.2
 versiondisplay = "{0:.2f}".format(version)
 
 # Make a nice menu for the user
@@ -164,11 +165,14 @@ if not args.blastab:
 	if not os.path.isdir(args.temp + "/" + nameref + '_db/'): # If it exist already, don't bother
 		makeBLASTdb(args.assembly, databasename, 'nucl')
 
-	# BLAST
+	# Type of BLAST search
+	extrargs = f"-perc_identity {args.identity}"
 	if args.task in ['blastn-short', 'dc-megablast', 'megablast', 'vecscreen']: 
-		args.task = "blastn -task {args.task}"
+		args.task = f"blastn -task {args.task}"
+	elif args.task in ['tblastn']: # it doesn't take -perc_identity
+		extrargs = ""
 
-	if args.seqid: # Only one sequence
+	if args.seqid: # Do the BLAST search with only one sequence
 		outputhits = args.temp + "/" + queryseq.id + "VS" + nameref + "-" + "hits.tab"
 
 		# Make a temporary file for the fasta file with a single sequence and BLAST it
@@ -176,7 +180,7 @@ if not args.blastab:
 			SeqIO.write(queryseq, tempquery, "fasta")
 			tempquery.flush() # important to flush the data because the file might not be closed immediately after writing to it
 
-			blast_command = f"{args.task} -db {databasename} -query {tempquery.name} -out {outputhits} -outfmt 6 -evalue {args.evalue} -num_threads {args.threads} -perc_identity {args.identity}"
+			blast_command = f"{args.task} -db {databasename} -query {tempquery.name} -out {outputhits} -outfmt 6 -evalue {args.evalue} -num_threads {args.threads} {extrargs}"
 			print(blast_command)
 			process = subprocess.Popen(blast_command.split(), stdout=subprocess.PIPE) # pipe the command to the shell
 			stdout, stderr = process.communicate() # run it
@@ -184,7 +188,7 @@ if not args.blastab:
 	else: # Multifasta
 		outputhits = args.temp + "/" + nameqry + "VS" + nameref + "-" + "hits.tab"
 
-		blast_command = f"{args.task} -db {databasename} -query {args.query} -out {outputhits} -outfmt 6 -evalue {args.evalue} -num_threads {args.threads} -perc_identity {args.identity}"
+		blast_command = f"{args.task} -db {databasename} -query {args.query} -out {outputhits} -outfmt 6 -evalue {args.evalue} -num_threads {args.threads} {extrargs}"
 
 		process = subprocess.Popen(blast_command.split(), stdout=subprocess.PIPE) # pipe the command to the shell
 		stdout, stderr = process.communicate() # run it
