@@ -183,7 +183,7 @@ if not args.blastab:
 			tempquery.flush() # important to flush the data because the file might not be closed immediately after writing to it
 
 			blast_command = f"{args.task} -db {databasename} -query {tempquery.name} -out {outputhits} -outfmt 6 -evalue {args.evalue} -num_threads {args.threads} {extrargs}"
-			print(blast_command)
+			# print(blast_command)
 			process = subprocess.Popen(blast_command.split(), stdout=subprocess.PIPE) # pipe the command to the shell
 			stdout, stderr = process.communicate() # run it
 
