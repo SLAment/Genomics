@@ -23,6 +23,7 @@
 
 
 ## VERSION notes
+# version 2.3 - New type exoncds gives only the coding part of exons (useful if you have UTRs)
 # version 2.2 - Added new opton to report all the sequences in the coding sense --insense
 # version 2.1 - The database can now take rRNA as a type
 # version 2.0 - The database can now take tRNA as a type; the script no longer assumes mRNA is the first level child of gene
@@ -44,9 +45,9 @@ import re
 import gffutils
 # ------------------------------------------------------
 
-version = 2.20
+version = 2.3
 versiondisplay = "{0:.2f}".format(version)
-supportedtypes = ["gene", "CDS", "cds", "exon", "noutrs", "similarity", "expressed_sequence_match", "repeat", "pseudogene"] # Unlike the CDS, Exons may contain the UTRs; noutrs is from start to stop codon without introns in nuleotides
+supportedtypes = ["gene", "CDS", "cds", "exon", "exoncds", "noutrs", "similarity", "expressed_sequence_match", "repeat", "pseudogene"] # Unlike the CDS, Exons may contain the UTRs; noutrs is from start to stop codon without introns in nuleotides
 
 # ============================
 # Make a nice menu for the user
@@ -56,7 +57,7 @@ parser = argparse.ArgumentParser(description="* Extract GFF3 features to fasta f
 # Add options
 parser.add_argument('fastafile', help="Fasta file with the genomic secuences")
 parser.add_argument('GFF', help="GFF3 file")
-parser.add_argument("--type", "-t", help="The feature you want to extract. Options are: "+str(supportedtypes)+", Default: gene. Notice that 'exon' would include the UTRs if present (eg. MAKER output). The option 'noutrs' includes all the body of the gene, except UTRs.", default='gene', choices = supportedtypes)
+parser.add_argument("--type", "-t", help="The feature you want to extract. Options are: "+str(supportedtypes)+", Default: gene. Notice that 'exon' would include the UTRs if present (eg. MAKER output). The option 'noutrs' includes all the body of the gene, except UTRs. The option 'exoncds' gives only the coding part of exons, as opposed to asking for 'CDS', which will trim trailing bases that would shift the frame when translated (if --join is not used).", default='gene', choices = supportedtypes)
 parser.add_argument('--proteinon', '-p', help="Return protein sequences (only useful for CDS)", default=False, action='store_true')
 parser.add_argument('--join', '-j', help="Join together the features that belong to a single gene (only useful for CDS and exon)", default=False, action='store_true')
 parser.add_argument('--specificgene', '-g', help="Extract only this specific gene or list of genes separated by commas and no spaces (give ID or Name of gene)") 
@@ -91,7 +92,13 @@ except IOError as msg:  # Check that the file exists
 # ------------------------------------------------------
 
 # I often write it in small case, so to catch that
-if args.type == "cds": args.type = "CDS" # it's necessary in capitals for later
+if args.type == "cds": 
+	args.type = "CDS" # it's necessary in capitals for later
+elif args.type == "EXONCDS" or args.type == "exonCDS": 
+	args.type = "exoncds"
+
+if args.type == "exoncds" and args.join:
+	args.type = "CDS" # It's the same
 
 # ---------------------------------
 # Make database
@@ -309,11 +316,11 @@ else:
 				SeqIO.write(child_concat, output_handle, "fasta")
 
 		# Getting CDS	
-		elif args.type == 'CDS':
+		elif args.type == 'CDS' or args.type == "exoncds":
 			child_counter = 1
 			child_concat = Seq('')
 
-			for child in db.children(gene, featuretype=args.type, order_by='start'):
+			for child in db.children(gene, featuretype='CDS', order_by='start'):
 				# --- Get the cdsparent name from the mRNA ---
 				if args.mRNAids:
 					parents = db.parents(child, featuretype='mRNA')
@@ -342,9 +349,12 @@ else:
 						start = child.start - 1 + phase
 						raw_stop = child.end
 
-						# Trim the extra bases at the end that are lost because the CDS are not joint
-						howmanycodons = (raw_stop - start) // 3
-						stop = (howmanycodons * 3) + start 
+						if args.type == "CDS":
+							# Trim the extra bases at the end that are lost because the CDS are not joint
+							howmanycodons = (raw_stop - start) // 3
+							stop = (howmanycodons * 3) + start 
+						elif args.type == "exoncds":
+							stop = raw_stop
 
 						# Get DNA seq and translate
 						cdsseq = seq_record[start:stop] # Last letter will be excluded
@@ -357,9 +367,12 @@ else:
 						raw_start = child.start - 1
 						stop = child.end - phase 
 
-						# Trim the extra bases at the end that are lost because the CDS are not joint
-						howmanycodons = (stop - raw_start) // 3
-						start = stop - (howmanycodons * 3)
+						if args.type == "CDS":
+							# Trim the extra bases at the end that are lost because the CDS are not joint
+							howmanycodons = (stop - raw_start) // 3
+							start = stop - (howmanycodons * 3)
+						elif args.type == "exoncds":
+							start = raw_start
 
 						if args.proteinon: # Get DNA seq, reverse complement, and translate
 							cdsseq = seq_record[start:stop].reverse_complement()
