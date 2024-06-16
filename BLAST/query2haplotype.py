@@ -8,6 +8,7 @@
 # genome. If the --haplo option is used, then it searches for a haplotype
 # instead.
 
+# version 2.22 - Now the filtering for percentage of identity is generalized (so it includes tblastn)
 # version 2.21 - Added --color option
 # version 2.2 - Fixed a mistake with the tasks and with the treatment of tblastn
 # version 2.1 - Removed the use of the Bio.Blast.Applications module (which got depricated) in favor of using subprocess.
@@ -34,7 +35,7 @@ import tempfile # To make a temporary file for single sequences
 from shutil import rmtree # For removing directories
 import argparse # For the fancy options
 # ------------------------------------------------------
-version = 2.21
+version = 2.22
 versiondisplay = "{0:.2f}".format(version)
 
 # Make a nice menu for the user
@@ -223,11 +224,13 @@ if args.haplo: # We are looking for entire haplotypes and the blast is only the 
 				hit5end = int(hit5[9])
 				hit3start = int(hit3[8])
 				hit3end = int(hit3[9])
+				hit5identity = float(hit5[2])
+				hit3identity = float(hit3[2])
 
 				maxcoord = max([hit5start, hit5end, hit3start, hit3end])
 				mincoord = min([hit5start, hit5end, hit3start, hit3end])
 	
-				if ((maxcoord - mincoord) <= args.vicinity) and ((maxcoord - mincoord) >= args.minsize):		
+				if ((maxcoord - mincoord) <= args.vicinity) and ((maxcoord - mincoord) >= args.minsize) and (hit5identity >= args.identity) and (hit3identity >= args.identity):		
 					# Add it to dictionary and keep the edges
 
 					if hit5[1] not in chunks.keys():
@@ -291,6 +294,7 @@ else: # The BLAST hits themselves are the haplotypes
 		start = min(int(hit[8]), int(hit[9]))
 		end = max(int(hit[8]), int(hit[9]))
 		hitseq = records_dict[hit[1]] 	# The actual sequence hit by the query
+		peridentity = float(hit[2])
 
 		# Avoid negative numbers
 		if start - args.extrabp < 0:
@@ -304,7 +308,7 @@ else: # The BLAST hits themselves are the haplotypes
 		else:
 			end_final = end + args.extrabp
 
-		if (abs(start_final - end_final) >= args.minsize):	# (abs(start_final - end_final) <= args.vicinity) and 
+		if (abs(start_final - end_final) >= args.minsize) and (peridentity >= args.identity):	# the identity filtering won't natively work with tblastn so I put a filter here too just in case
 			# Slice it 
 			slice = hitseq[start_final:end_final]
 
@@ -326,7 +330,7 @@ else: # The BLAST hits themselves are the haplotypes
 				# gfffile.write(f"{hitseq.id}\tBLASTn\tsimilarity\t{start_final + 1}\t{end_final}\t.\t.\t.\tID={hit[0]}_{hitsdic[hitseq.id]:03d};Name={hit[0]};eval={hit[10]};identity={hit[2]};length={len(slice)};color=#000000;\n")
 				
 				idcount +=1
-				gfffile.write(f"{hitseq.id}\tBLASTn\tsimilarity\t{start_final + 1}\t{end_final}\t.\t.\t.\tID={hit[0]}_{idcount:03d};Name={hit[0]};eval={hit[10]};identity={hit[2]};length={len(slice)};color={args.color};\n")
+				gfffile.write(f"{hitseq.id}\tBLASTn\tsimilarity\t{start_final + 1}\t{end_final}\t.\t.\t.\tID={hit[0]}_{idcount:03d};Name={hit[0]};eval={hit[10]};identity={peridentity};length={len(slice)};color={args.color};\n")
 
 if args.noself: # Print only sequences that are different from the queries
 	for seq in query_dict:
