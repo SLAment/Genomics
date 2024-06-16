@@ -23,6 +23,7 @@
 
 
 ## VERSION notes
+# version 2.31 - Now the name of the specific gene will be searched in the Note attribute too
 # version 2.3 - New type exoncds gives only the coding part of exons (useful if you have UTRs)
 # version 2.2 - Added new opton to report all the sequences in the coding sense --insense
 # version 2.1 - The database can now take rRNA as a type
@@ -45,7 +46,7 @@ import re
 import gffutils
 # ------------------------------------------------------
 
-version = 2.3
+version = 2.31
 versiondisplay = "{0:.2f}".format(version)
 supportedtypes = ["gene", "CDS", "cds", "exon", "exoncds", "noutrs", "similarity", "expressed_sequence_match", "repeat", "pseudogene"] # Unlike the CDS, Exons may contain the UTRs; noutrs is from start to stop codon without introns in nuleotides
 
@@ -247,9 +248,12 @@ else:
 		# --
 		
 		seq_record = records_dict[gene.chrom] # The chromosome sequence
-
-		if args.specificgene and ((geneID not in focalgenes) and (genename not in focalgenes)):
-			continue # If the gene is not in the user's list, then skip the rest of the code and go to the next gene
+		
+		# If the gene is not in the user's list, then skip the rest of the code and go to the next gene
+		if 'Note' in gene.attributes:
+			if gene.attributes['Note'][0] not in focalgenes: continue
+		elif args.specificgene and ((geneID not in focalgenes) and (genename not in focalgenes)):
+			continue
 
 		if args.type == 'gene':
 			geneseq = getseqbasic(gene, seq_record) # Get the sequence for this gene
@@ -354,6 +358,7 @@ else:
 							howmanycodons = (raw_stop - start) // 3
 							stop = (howmanycodons * 3) + start 
 						elif args.type == "exoncds":
+							start = child.start - 1
 							stop = raw_stop
 
 						# Get DNA seq and translate
@@ -373,12 +378,14 @@ else:
 							start = stop - (howmanycodons * 3)
 						elif args.type == "exoncds":
 							start = raw_start
+							stop = child.end
 
-						if args.proteinon: # Get DNA seq, reverse complement, and translate
+						if args.proteinon or args.type == "exoncds": # Get DNA seq, reverse complement, and translate
 							cdsseq = seq_record[start:stop].reverse_complement()
 							cdsseq.id = seq_record.id
 							cdsseq.description = seq_record.description
-							cdsseq.seq = cdsseq.seq.translate(table = args.code)
+							if args.proteinon:
+								cdsseq.seq = cdsseq.seq.translate(table = args.code)
 						else:
 							cdsseq = seq_record[start:stop]
 
