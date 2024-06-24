@@ -250,10 +250,11 @@ else:
 		seq_record = records_dict[gene.chrom] # The chromosome sequence
 		
 		# If the gene is not in the user's list, then skip the rest of the code and go to the next gene
-		if 'Note' in gene.attributes:
-			if gene.attributes['Note'][0] not in focalgenes: continue
-		elif args.specificgene and ((geneID not in focalgenes) and (genename not in focalgenes)):
-			continue
+		if args.specificgene:
+			if 'Note' in gene.attributes:
+				if gene.attributes['Note'][0] not in focalgenes: continue
+			elif args.specificgene and ((geneID not in focalgenes) and (genename not in focalgenes)):
+				continue
 
 		if args.type == 'gene':
 			geneseq = getseqbasic(gene, seq_record) # Get the sequence for this gene
