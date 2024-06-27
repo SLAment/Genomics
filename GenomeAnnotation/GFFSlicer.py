@@ -119,7 +119,7 @@ for line in GFFopen: # Without saving in memory, but then I can't access the nex
 				continue # If not, ignore this line
 			elif (currentend > inputend): # Breaking here will prevent orphan exons that can fit the range of a last gene that doesn't fully
 				break
-			else: # It it is in range, keep it while fixing the coordinates
+			else: # It it is in range, keep it while fixing the coordinates
 				if args.keepcoords: # Leave the coordinates as in the input file
 					goodlines.append(line)
 				else: # Correct them to match the new range				
@@ -141,7 +141,7 @@ for line in GFFopen: # Without saving in memory, but then I can't access the nex
 						newstart = currentstart - inputstart
 						newend = currentend - inputstart		
 
-					# Put the new coordinates in 
+					# Put the new coordinates in 
 					newcols[3:5] = str(newstart + 1), str(newend + 1) # The plus one makes sure that it stays in base 1 (inputend is base 0)
 					
 					newline = '\t'.join(newcols) + '\n' # Stitch it together as a line
