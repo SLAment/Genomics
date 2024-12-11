@@ -11,6 +11,7 @@
 
 # Version 3: change from python2 to python3
 # Version 4: change to base 1 and add a few new functions
+#		  4.3 added option --nocomments
 
 # TODO: an option to take a specific contig for the gff
 # ==================================================
@@ -27,7 +28,7 @@ import argparse  # For the fancy options
 from argparse import RawTextHelpFormatter # To force argparse.ArgumentParser to recognize \n
 import datetime
 # ------------------------------------------------------
-version = 4.2
+version = 4.3
 versiondisplay = "{0:.2f}".format(version)
 
 # ============================
@@ -44,6 +45,7 @@ parser.add_argument("--contig", "-c", help="Name of the contig that should be sl
 parser.add_argument("--outputname", "-o", help="Output name set by the user")
 parser.add_argument('--keepcoords', '-k', help="Slice the GFF3 file but without correcting the coordinates", default=False, action='store_true')
 parser.add_argument('--invertcoords', '-i', help="Slice the GFF3 file but invert the coordinates (for reverse-complemented sequences); DOES NOT WORK FOR CDS", default=False, action='store_true')
+parser.add_argument('--nocomments', '-n', help="Do not output any line starting with a # in the original GFF file", default=False, action='store_true')
 
 parser.add_argument('--addcoords', '-a', help="Add the value of inputstart to the coordinates instead of slicing (provide any number as end)", default=False, action='store_true')
 
@@ -77,14 +79,15 @@ else:
 goodlines = []
 
 for line in GFFopen: # Without saving in memory, but then I can't access the next line so easily
-	if '##gff-version 3' in line: 
-		goodlines.append(line)
-		# Add a line to mark the file with this script
-		now = datetime.datetime.now()
-		gffslicerstr = "# Sliced from " + os.path.basename(args.GFF) + " using " + os.path.basename(sys.argv[0]) + " v. " + str(versiondisplay) + ' on ' + str(now) + '\n'
-		goodlines.append(gffslicerstr)
+	if '##gff-version 3' in line:
+		if not args.nocomments: 
+			goodlines.append(line)
+			# Add a line to mark the file with this script
+			now = datetime.datetime.now()
+			gffslicerstr = "# Sliced from " + os.path.basename(args.GFF) + " using " + os.path.basename(sys.argv[0]) + " v. " + str(versiondisplay) + ' on ' + str(now) + '\n'
+			goodlines.append(gffslicerstr)
 	elif line.startswith( '#' ):
-		goodlines.append(line)
+		if not args.nocomments: goodlines.append(line)
 	elif line == '\n': # If the line is empty
 		pass		
 	elif '>' == line[0]: # We reached a fasta sequence (assumes the gff stops there)
