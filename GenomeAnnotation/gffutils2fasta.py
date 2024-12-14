@@ -23,6 +23,7 @@
 
 
 ## VERSION notes
+# version 2.33 - Deal with Augusts GFF files that have a transcript rather than mRNA type
 # version 2.31 - Now the name of the specific gene will be searched in the Note attribute too
 # version 2.3 - New type exoncds gives only the coding part of exons (useful if you have UTRs)
 # version 2.2 - Added new opton to report all the sequences in the coding sense --insense
@@ -46,7 +47,7 @@ import re
 import gffutils
 # ------------------------------------------------------
 
-version = 2.32
+version = 2.33
 versiondisplay = "{0:.2f}".format(version)
 supportedtypes = ["gene", "CDS", "cds", "exon", "exoncds", "noutrs", "similarity", "expressed_sequence_match", "repeat", "pseudogene"] # Unlike the CDS, Exons may contain the UTRs; noutrs is from start to stop codon without introns in nuleotides
 
@@ -114,6 +115,7 @@ dbfnchoice = ':memory:'
 # http://daler.github.io/gffutils/database-ids.html
 id_spec={"gene": ["ID", "Name"], 
 	"mRNA": ["ID", "transcript_id"], 
+	"transcript": ["ID", "transcript_id"], 
 	"rRNA": ["ID", "Name"],
 	"tRNA": ["ID", "Name"],
 	"repeat": ["ID", "Name"], 
@@ -246,6 +248,18 @@ else:
 		except:
 			genename = "" # An empty string
 		# --
+
+		# -- Sometimes the first child is transcript and sometimes is mRNA
+		children = db.children(gene, order_by='start', level = 1)
+		child_types = set()
+		for child in children:
+			child_types.add(child.featuretype)
+
+		if 'mRNA' in child_types: 
+			mRNAtype = 'mRNA'
+		elif 'transcript' in child_types: 
+			mRNAtype = 'transcript'
+		# --
 		
 		seq_record = records_dict[gene.chrom] # The chromosome sequence
 		
@@ -253,6 +267,13 @@ else:
 		if args.specificgene:
 			if 'Note' in gene.attributes:
 				if gene.attributes['Note'][0] not in focalgenes: continue
+
+			elif args.mRNAids: # Use the mRNA IDs to search in the focalgenes intead
+				mrna_children = db.children(gene, featuretype=mRNAtype, order_by='start')
+				for child in mrna_children:
+					mrnaID = child['ID'][0] # There is usually a single mRNA (SO IT CAN'T HANDLE ISOFORMS)
+				if mrnaID not in focalgenes: continue
+
 			elif args.specificgene and ((geneID not in focalgenes) and (genename not in focalgenes)):
 				continue
 
@@ -328,7 +349,7 @@ else:
 			for child in db.children(gene, featuretype='CDS', order_by='start'):
 				# --- Get the cdsparent name from the mRNA ---
 				if args.mRNAids:
-					parents = db.parents(child, featuretype='mRNA')
+					parents = db.parents(child, featuretype=mRNAtype)
 					childID = list(parents)[0]['ID'][0] # Used if CDS are not joined
 
 				else:
