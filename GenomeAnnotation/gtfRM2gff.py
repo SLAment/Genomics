@@ -55,7 +55,7 @@ def get_next_id(type, prefix):
     next_ids[type] += 1
     return(id)
 
-rmpattern = re.compile('Target "Motif:([\w\(\)-.]*)"\s([\d]*)\s([\d]*)') # Usually looks like this 'Target "Motif:(TA)n" 1 25'
+rmpattern = re.compile('Target "Motif:([\w\(\)-.]*)"\s([-\d]*)\s([-\d]*)') # Usually looks like this 'Target "Motif:(TA)n" 1 25'
 def attributesmaker(attributes_string):  
 	""" Re-shape the gtf attributes to match a gff3 format """
 	matchy = rmpattern.search(attributes_string)
