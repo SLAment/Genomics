@@ -2,7 +2,7 @@
 # encoding: utf-8
 
 # ================== purgeFasta =================
-# Purge or subset a multifasta file using their names
+# Purge a multifasta file from given sequences
 # ==================================================
 # Sandra Lorena Ament Velasquez
 # 2025/03/28
@@ -15,7 +15,7 @@ import argparse # For the fancy options
 import sys
 
 # ------------------------------------------------------
-version = 1.0
+version = 1.1
 versiondisplay = "{0:.2f}".format(version)
 
 # ---------------------------------
@@ -27,6 +27,7 @@ parser = argparse.ArgumentParser(description="* Purge a multifasta file from giv
 # Add options
 parser.add_argument('fasta', help="Multifasta file")
 parser.add_argument('list', help="File with the name of the sequences to extract in a column", type=str)
+parser.add_argument('--string', '-s', help="The list is a comma-separated string, rather than a one-column file", default=False, action='store_true')
 parser.add_argument('--purge', '-v', help="Print the sequences NOT in the list", default=False, action='store_true')
 
 parser.add_argument('--version', "-V", action='version', version='%(prog)s ' + versiondisplay)
@@ -42,7 +43,10 @@ except IOError as msg:  # If no arguments are given
 # Do it!
 # ---------------------------------
 
-tabs = {line.rstrip("\n") for line in open(args.list, "r")}  # Read tab file into a set to make it faster to look
+if args.string:
+	tabs = args.list.split(',')
+else:
+	tabs = {line.rstrip("\n") for line in open(args.list, "r")}  # Read tab file into a set to make it faster to look
 
 for record in SeqIO.parse(args.fasta, "fasta"):
 	if args.purge:
