@@ -26,8 +26,11 @@ The scripts are made to either parse the BLAST output, filter it or modify it, o
 ## Fasta Manipulation
 
 - `fastaconcat.py` - Script to concatenate any number of fasta files, either by name (`--name`) or by rank (default).
+- `gc_calc.py` - Script to calculate GC content from a (multi) fasta file (reporting for each individual sequence)
 - `nexus2markers.py` - Script to extract all partitions in a simple nexus file as individual fasta files.
-- `subsetfastaIDbioStdout.py` - Script to produce a subset of an input fasta file using one or several strings that identify specific sequences. The output goes to standard output. It depends on biopython.
+- `psim_calc.py` - Script to calculate Psim sensu [Jorda and Kajava (2009)](https://academic.oup.com/bioinformatics/article/25/20/2632/193638) in the program T-REKS
+- `purgeFasta.py` - Script to subset or remove sequences in an input fasta file using a one-column file with the name of the sequences (to either remove or extract). It depends on biopython.
+- `subsetfastaIDbioStdout.py` - Earlier version of `purgeFasta.py`. Script to produce a subset of an input fasta file using one or several strings that identify specific sequences. The output goes to standard output. It depends on biopython.
 
 ## Genome Annotation
 
