@@ -92,9 +92,9 @@ With a fasta file
 
 With a simple gtf file, you have to tell it what columns contain the contigs (`-c`), the start coordinates (`-s`), and the end coordinates (`-e`).
 
-	$ ./invertingBEDs.py myfile.gtf assembly.fasta --fasta -c 1 -s 4 -e 5 > output.bed
+	$ ./invertingBEDs.py myfile.gtf assembly.fasta --fasta -c 1 -s 4 -e 5 > output.gtf
 
-WARNING: this won't correct the sense of complicated features like protein-coding genes. See `GFFSlicer.py` for a script more dedicated to deal with GFF3 files.
+**OBS** this won't correct the sense of complicated features like protein-coding genes. See `GFFSlicer.py` for a script more dedicated to deal with GFF3 files.
 
 You can also use it for files with a single coordinate column (e.g. VCF files), just give the same column to `-s` and `-e`. (less tested)
 
