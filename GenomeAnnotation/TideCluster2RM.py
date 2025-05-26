@@ -27,6 +27,7 @@ parser = argparse.ArgumentParser(description="* Extract GFF3 features to fasta f
 # Add options
 parser.add_argument('tarean', help="The tarean_report.tsv file")
 parser.add_argument('--superfams', '-s', help="The trc_superfamilies.csv file", default=None, type=str)
+parser.add_argument('--monomers', '-m', help="Do NOT duplicate the TRC monomers (consensus), leave them as monomers.", default=False, action='store_true')
 
 # extras
 parser.add_argument('--version', '-v', action='version', version='%(prog)s ' + versiondisplay)
@@ -86,14 +87,18 @@ sorted_names = natural_sort(seqdic.keys())
 
 # Print as a fasta file
 for trc in sorted_names:
+	# sequence header
 	finalseqname = f">{trc}#Satellite"
 
 	if args.superfams is not None:
 		if trc in superfamilies.keys():
-
 			finalseqname = f">sf{superfamilies[trc][0]}__{trc}#Satellite"
-	
 	print(finalseqname)
-	print(f"{seqdic[trc].replace('<pre>', '')}")
 
+	# sequence
+	finalseq = f"{seqdic[trc].replace('<pre>', '')}"
+	if args.monomers:
+		print(finalseq)
+	else:
+		print(finalseq*2)
 
