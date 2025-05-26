@@ -108,7 +108,7 @@ Where XXXX is the NCBI locus_tag, and 114110 is a number I chose to start the ge
 
 - `tbl2gff.py` - Experimental little script to transform a tbl file, like the one produced by `MFannot4ncbi.py`, into a gff3 file.
 
-- `TideCluster2RM.py` - Script to process the output of TideCluster (`tarean_report.tsv` and `trc_superfamilies.csv`) into a repeat library compatible with RepeatMasker. The superfamilies are optional, and they get added as  `TRCxx#Satellite/sfY` for a xx family that belongs to a Y superfamily.
+- `TideCluster2RM.py` - Script to process the output of TideCluster (`tarean_report.tsv` and `trc_superfamilies.csv`) into a repeat library compatible with RepeatMasker. The superfamilies are optional, and they get added as  `sfY__TRCxx#Satellite` for a xx family that belongs to a Y superfamily.
 
 
 

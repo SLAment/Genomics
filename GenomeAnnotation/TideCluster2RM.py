@@ -91,7 +91,7 @@ for trc in sorted_names:
 	if args.superfams is not None:
 		if trc in superfamilies.keys():
 
-			finalseqname = f">{trc}#Satellite/sf{superfamilies[trc][0]}"
+			finalseqname = f">sf{superfamilies[trc][0]}__{trc}#Satellite"
 	
 	print(finalseqname)
 	print(f"{seqdic[trc].replace('<pre>', '')}")
