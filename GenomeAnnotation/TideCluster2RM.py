@@ -16,7 +16,7 @@ import re
 # import sys  # To exit the script
 # import os  # For the input name
 # ------------------------------------------------------
-version = 1.01
+version = 1.1
 versiondisplay = "{0:.2f}".format(version)
 
 # ============================
