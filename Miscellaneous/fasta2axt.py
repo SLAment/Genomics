@@ -8,7 +8,7 @@
 # the main focus and all the other sequences are compared against that one.
 # ================== fasta2axt =================
 # Sandra Lorena Ament Velásquez
-# 2015/10/12-20
+# 2025/05/30
 # +++++++++++++++++++++++++++++++++++++++++++++++++
 
 # ------------------------------------------------------
@@ -21,7 +21,7 @@ import argparse # For the fancy options
 # ============================
 # Make a nice menu for the user
 # ============================
-version = 1.0
+version = 1.01
 versiondisplay = "{0:.2f}".format(version)
 
 # Make a parser for the options
@@ -32,7 +32,7 @@ parser.add_argument('fastafile', help="Fasta file containing the query sequences
 parser.add_argument('-f', '--focus', help="Name of the sequence to be compare all other sequences against. Default is to take the first sequence as focus.", type=str, default = None)
 
 # Extras
-parser.add_argument('-b', "--version", action='version', version='%(prog)s '+ versiondisplay)
+parser.add_argument('-v', "--version", action='version', version='%(prog)s '+ versiondisplay)
 
 
 # Parse resulting arguments
@@ -66,26 +66,4 @@ for record in records_dict:
 		print(focusseq)
 		print(records_dict[record].seq)
 		print()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
