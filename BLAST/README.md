@@ -24,6 +24,13 @@ That will add 2000 bp to the right and left of the retrieved hits.
 
 A handy option is `--makegff` (from version 1.6). It will produce a simple gff3 file of its output, ideal to be visualized in for example IGV. 
 
+Do you have a short sequence that you want to BLAST and you don't want to make a file? No problem, replace the query for the sequence and use the flag `--primer` or `-p`:
+
+    $ python query2haplotype.py path/to/assembly.fasta CCCTTTGTACACACCGCCCGTCGCTACTACCGATTGAATGGCTCAGTGAGGCTTCCGGAC --primer > hits.fasta
+
+If the sequence is very short, it might help to make the e-value super relaxed (`-e 10`) and/or experiment with using `--task "blastn-short"`.
+
+
 For additional options see:
 
     $ python query2haplotype.py -h

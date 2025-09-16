@@ -8,7 +8,7 @@
 # genome. If the --haplo option is used, then it searches for a haplotype
 # instead.
 
-# version 2.3 - Added a new function to search for primers (experimental)
+# version 2.3 - Added a new function to BLAST strings of nucleotides directly as a query rather than a file
 # version 2.22 - Now the filtering for percentage of identity is generalized (so it includes tblastn)
 # version 2.21 - Added --color option
 # version 2.2 - Fixed a mistake with the tasks and with the treatment of tblastn
