@@ -8,6 +8,7 @@
 # genome. If the --haplo option is used, then it searches for a haplotype
 # instead.
 
+# version 2.3 - Added a new function to search for primers (experimental)
 # version 2.22 - Now the filtering for percentage of identity is generalized (so it includes tblastn)
 # version 2.21 - Added --color option
 # version 2.2 - Fixed a mistake with the tasks and with the treatment of tblastn
@@ -35,7 +36,7 @@ import tempfile # To make a temporary file for single sequences
 from shutil import rmtree # For removing directories
 import argparse # For the fancy options
 # ------------------------------------------------------
-version = 2.22
+version = 2.3
 versiondisplay = "{0:.2f}".format(version)
 
 # Make a nice menu for the user
@@ -60,6 +61,7 @@ parser.add_argument('--color', '-l', help="HEX code for the color of the feature
 parser.add_argument("--addquery", "-q", help="Print the query along with the BLAST results", default=False, action='store_true')
 parser.add_argument("--tophit", "-x", help="Slice only the first, top hit of the BLAST search (won't work with --haplo)", default=False, action='store_true')
 parser.add_argument("--nocoords", "-0", help="Do not append coordinates of slices into the sequences names", default=False, action='store_true')
+parser.add_argument("--primer", "-p", help="The query is not a fasta file, but a string of nucleotides to be BLASTed (adjust -e accordingly to get hits). For example, TCCTCCGCTTATTGATATGC", default=False, action='store_true')
 
 # Make a mutualy-exclusive group
 selfgroup = parser.add_mutually_exclusive_group()
@@ -79,7 +81,7 @@ try:
 	# parse the command line by passing a sequence of argument strings to
 	# parse_args(). By default, the arguments are taken from sys.argv[1:]
 	args = parser.parse_args()
-	queryopen = open(args.query, 'r')
+	if not args.primer: queryopen = open(args.query, 'r')
 	assemblyopen = open(args.assembly, 'r')
 except IOError as msg:  # Check that the file exists
 	parser.error(str(msg)) 
@@ -133,12 +135,23 @@ def makeBLASTdb(fasta, databasename, dbtype):
 records_dict = SeqIO.to_dict(SeqIO.parse(assemblyopen, "fasta"))
 
 # Query
-query_dict = SeqIO.to_dict(SeqIO.parse(queryopen, "fasta"))
+if args.primer:
+	from Bio.Seq import Seq
+	from Bio.SeqRecord import SeqRecord
+
+	seq_obj = Seq(args.query)
+	primerseq = SeqRecord(seq_obj, id="primer", description="" ) # Create a SeqRecord
+	query_dict = {primerseq.id: primerseq} # Make it a dictionary
+
+else:
+	query_dict = SeqIO.to_dict(SeqIO.parse(queryopen, "fasta"))
 
 # If the file comes from RepeatModeler or EDTA, the TE names have a format in the style 
 # >TE_00003657_INT#LTR/Copia
 # The # breaks the BLAST database.
 
+if args.primer:
+	args.seqid = "primer"
 
 if args.seqid:
 	# Get all sequences that match that string
@@ -161,7 +174,11 @@ else:
 if not args.blastab:
 	# Define the names of the databases
 	nameref = namebase(args.assembly)
-	nameqry = namebase(args.query)
+	if args.primer: 
+		nameqry = "primer"
+	else:
+		nameqry = namebase(args.query)
+
 	databasename = args.temp + "/" + nameref + '_db/' + nameref + '_db'
 
 	# Make the local BLAST databases
