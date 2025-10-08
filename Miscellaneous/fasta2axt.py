@@ -21,7 +21,7 @@ import argparse # For the fancy options
 # ============================
 # Make a nice menu for the user
 # ============================
-version = 1.01
+version = 1.02
 versiondisplay = "{0:.2f}".format(version)
 
 # Make a parser for the options
@@ -30,6 +30,9 @@ parser = argparse.ArgumentParser(description="*** fasta2axt ***", epilog="Transf
 # Add basic options
 parser.add_argument('fastafile', help="Fasta file containing the query sequences used with MUMmer")
 parser.add_argument('-f', '--focus', help="Name of the sequence to be compare all other sequences against. Default is to take the first sequence as focus.", type=str, default = None)
+
+# Useful
+parser.add_argument('--ignore', '-i', help="If the focus sequence is not in the alignment, do not throw an error. This is useful if run within Snakemake.", default=False, action='store_true')
 
 # Extras
 parser.add_argument('-v', "--version", action='version', version='%(prog)s '+ versiondisplay)
@@ -50,8 +53,11 @@ else:
 		if args.focus == record:
 			focus = record
 	if focus == '': 
-		print(f"Sequence {args.focus} not found. Any typos?")
-		sys.exit(1)
+		if args.ignore:
+			sys.exit(0)
+		else:
+			print(f"Sequence {args.focus} not found. Any typos?")
+			sys.exit(1)
 
 	records_dict[focus]
 
