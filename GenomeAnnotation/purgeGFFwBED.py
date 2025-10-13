@@ -2,7 +2,7 @@
 # encoding: utf-8
 
 # ================== purgeGFFwBED =================
-# Remove gene models that overlap with a given BED file
+# Remove gene models that overlap with a given BED or gff3 file
 # ==================================================
 # Sandra Lorena Ament Velasquez
 # 2025/10/13
