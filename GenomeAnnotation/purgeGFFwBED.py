@@ -17,7 +17,7 @@ import re
 from intervaltree import Interval, IntervalTree 
 # ------------------------------------------------------
 
-version = 2.0
+version = 2.1
 versiondisplay = "{0:.2f}".format(version)
 
 # ============================
@@ -128,28 +128,54 @@ for contig, start, end, name in regionsToPurge:
         trees[contig] = IntervalTree()
     trees[contig][start:end] = name
 
+
+## ----- Version that only considers overlaps between CDS and BED/gff3 file -----
+
+# Get iterator of all genes
+genes = [gene for gene in db.features_of_type("gene")]
+
+badgenes = set()
+for gene in genes:
+	geneID = gene["ID"][0]
+	contig = gene.seqid
+
+	if contig not in trees:
+		continue  # no regions on this contig
+
+	# Get all CDS features for this gene
+	cds_features = list(db.children(gene, featuretype="CDS", order_by="start"))
+	if not cds_features:
+		continue  # skip genes without CDS (like tRNAs)
+
+	# Check if ANY CDS overlaps a region
+	overlaps_cds = any(
+		trees[contig].overlaps(cds.start, cds.end)
+		for cds in cds_features
+	)
+
+	if overlaps_cds:
+		badgenes.add(geneID)
+
 ## ----- Version assuming you don't want any overal at all with the gene -----
 
-# Precompute gene bounds (start, end of CDS)
-gene_bounds = {}
-for gene in db.features_of_type("gene"):
-    allchildren = list(db.children(gene, featuretype="CDS", order_by="start"))
-    if allchildren:
-        gene_bounds[gene["ID"][0]] = (gene.seqid, allchildren[0].start, allchildren[-1].end)
+# # Precompute gene bounds (start, end of CDS)
+# gene_bounds = {}
+# for gene in db.features_of_type("gene"):
+#     allchildren = list(db.children(gene, featuretype="CDS", order_by="start"))
+#     if allchildren:
+#         gene_bounds[gene["ID"][0]] = (gene.seqid, allchildren[0].start, allchildren[-1].end)
 
-# Filter out bad genes using the interval tree magic
-badgenes = set()
-for geneID, (contig, start, end) in gene_bounds.items():
-    if contig in trees and trees[contig].overlaps(start, end):
-        badgenes.add(geneID)
+# # Filter out bad genes using the interval tree magic
+# badgenes = set()
+# for geneID, (contig, start, end) in gene_bounds.items():
+#     if contig in trees and trees[contig].overlaps(start, end):
+#         badgenes.add(geneID)
 
 ## ----- Print output -----
 
 # Start an output gff file
 sys.stdout.write('##gff-version 3\n')
 
-# Get iterator of all genes
-genes = [gene for gene in db.features_of_type("gene")]
 
 for gene in genes:
 	if gene.id not in badgenes:
