@@ -14,9 +14,10 @@ import os # For the input name
 import argparse  # For the fancy options
 import gffutils
 import re
+from intervaltree import Interval, IntervalTree 
 # ------------------------------------------------------
 
-version = 1
+version = 2.0
 versiondisplay = "{0:.2f}".format(version)
 
 # ============================
@@ -116,43 +117,39 @@ if args.features:
 
 	regionsToPurge = selectedregions
 
-# Sort the regions so they are in order
-regionsToPurge.sort(key=lambda x: (x[0], int(x[1])))
+# # Sort the regions so they are in order (no longer necessary with the interval tree)
+# regionsToPurge.sort(key=lambda x: (x[0], int(x[1])))
 
-## ----- Filter the target gff file -----
-# Get iterator of all genes
-genes = [gene for gene in db.features_of_type("gene")]
+# Build the interval tree
+trees = {}  # one per contig
+for contig, start, end, name in regionsToPurge:
+    start, end = int(start), int(end)
+    if contig not in trees:
+        trees[contig] = IntervalTree()
+    trees[contig][start:end] = name
 
+## ----- Version assuming you don't want any overal at all with the gene -----
 
-badgenes = []
-for gene in genes:
-	geneID = gene['ID'][0]
-	feature_contig = gene.seqid
-		
-	for tab in regionsToPurge: # Loop through the regions and see if the gene falls there
-		contig, bed_start, bed_end  = tab[:3]
+# Precompute gene bounds (start, end of CDS)
+gene_bounds = {}
+for gene in db.features_of_type("gene"):
+    allchildren = list(db.children(gene, featuretype="CDS", order_by="start"))
+    if allchildren:
+        gene_bounds[gene["ID"][0]] = (gene.seqid, allchildren[0].start, allchildren[-1].end)
 
-		if feature_contig == contig: #the right contig
-			# We want from the start to the stop codon, including the introns, but excluding the UTRs
-			allchildren = [child for child in db.children(gene, featuretype='CDS', order_by='start')]
+# Filter out bad genes using the interval tree magic
+badgenes = set()
+for geneID, (contig, start, end) in gene_bounds.items():
+    if contig in trees and trees[contig].overlaps(start, end):
+        badgenes.add(geneID)
 
-			if len(allchildren) >= 1: # Some genes might not have CDS (e.g. tRNAs)
-				feature_start = allchildren[0].start # Start of first CDS to exclude UTRs
-				feature_end = allchildren[len(allchildren) - 1].end # End of the last CDS to exclude UTRs
-
-				# Easy case: there is no overlap between the gene and the region
-				if (feature_end < int(bed_start)) or (feature_start > int(bed_end)): # not overlapping features!
-					pass
-				else: 
-					badgenes.append(geneID)
-
-				# So BED regions that are *contained* within the genes will be tolerated
-				# Genes that are fully contained or overlapping with a region will be removed
-
-badgenes = list(set(badgenes))
+## ----- Print output -----
 
 # Start an output gff file
 sys.stdout.write('##gff-version 3\n')
+
+# Get iterator of all genes
+genes = [gene for gene in db.features_of_type("gene")]
 
 for gene in genes:
 	if gene.id not in badgenes:
@@ -160,8 +157,5 @@ for gene in genes:
 		for child in list(db.children(gene)):
 			sys.stdout.write(str(child) + "\n")
 		# sys.stdout.write("\n")
-
-
-
 
 
