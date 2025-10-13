@@ -3,13 +3,13 @@ A collection of scripts related to Genomics, mostly associated with my work on t
 
 I often use [conda](https://docs.conda.io/projects/conda/en/latest/) to install the dependencies of these scripts. For example, after installation of conda, I make an environment like this:
 
-    $ conda create -n bioinformatics blast=2.9.0 biopython=1.78 gffutils=0.10.1 -c bioconda
+    $ conda create -n genomics blast=2.16.0 biopython=1.85 gffutils=0.13 intervaltree=3.1.0 -c bioconda -c conda-forge
 
-(The BLAST scripts below have been tested and work well with BLAST 2.15.0+, biopython 1.81 and gffutils 0.12).
+(The scripts below have been tested and work well with BLAST 2.9.0 to 2.15.0+, biopython 1.78 to 1.81 and gffutils 0.10.1 to 0.12).
 
 Then I activate my environment:
 
-    $ conda activate bioinformatics
+    $ conda activate genomics
 
 Notice that the scripts (should) all use python 3. Tested only in Unix environments.
 
