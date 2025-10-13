@@ -71,6 +71,8 @@ The script can also make features partial, although this require testing. Notice
 
 	$ ./gff3TOtbl.py NyNewAnnotation.gff3 MyMtContig.fa --mfannot --partial > NyNewAnnotation.tbl
 
+- `gtfAugustus2gff.py` - Script to transform the ugly gtf produced by Augustus (v. 3.3.3) into a proper gff3.
+
 - `gtfRM2gff.py` - Script to transform the output of RepeatMasker (obtained with option `-gff` in RepeatMasker, which has a misleading name because it's a gtf) into a normal gff3. It also appends a color attribute to normal repeats (`-c`) and to simple repeats (`-s`) to be displayed in [The Integrative Genomics Viewer (IGV)](http://software.broadinstitute.org/software/igv/). 
 
 - `invertingBEDs.py` - Script to invert the coordinates of a BED file along a scaffold. It works with other file types as long as there is a scaffold and at least one coordinate column. This is useful when you wish you had done your analysis on the reverse-complement sequence of your reference fasta.
