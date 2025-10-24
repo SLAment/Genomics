@@ -14,7 +14,7 @@ import os # For the input name
 import sys # To exit the script 
 import re # Regular expressions
 # ------------------------------------------------------
-version = 1
+version = 1.1
 versiondisplay = "{0:.2f}".format(version)
 
 # ============================
@@ -24,6 +24,7 @@ parser = argparse.ArgumentParser(description="* Transform the ugly gtf of August
 
 # Add options
 parser.add_argument('GTF', help="GTF file from Augustus")
+parser.add_argument("--string", "-s", help="Add a string to the gene model names. Default is to not append anything. Recommended: 'Chr1', but avoid periods (.)!!  ", default='')
 
 # # extras
 parser.add_argument('--version', '-v', action='version', version='%(prog)s ' + versiondisplay)
@@ -52,19 +53,20 @@ with open(args.GTF, 'r') as gtffile:
 		
 		# Augustus creates many non-standard features, ignore those
 		if featuretype == "gene":
-			genedic[attributes] = 1
-			attributes = "ID=" + attributes + ";"
+			geneid = args.string + attributes
+			genedic[geneid] = 1
+			attributes = f"ID={geneid};"
 			sys.stdout.write(f"{contig}\t{source}\t{featuretype}\t{start}\t{end}\t{score}\t{strand}\t{frame}\t{attributes}\n")
 
 		elif featuretype == "transcript":
 			featuretype = "mRNA"
 			parentid = attributes.split('.')[0]
-			attributes = f'ID={attributes};Parent={parentid};'
+			attributes = f'ID={args.string}{attributes};Parent={args.string}{parentid};'
 			sys.stdout.write(f"{contig}\t{source}\t{featuretype}\t{start}\t{end}\t{score}\t{strand}\t{frame}\t{attributes}\n")
 
 		elif featuretype == "CDS":
 			# Make an exon feature
-			parentid = attributes.split(';')[0].split('"')[1]
+			parentid = args.string + attributes.split(';')[0].split('"')[1]
 			geneid = parentid.split('.')[0]
 			exonid =  f'{geneid}.exon{genedic[geneid]}'
 			attributes = f'ID={exonid};Parent={parentid};'
