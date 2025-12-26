@@ -6,6 +6,7 @@
 # from RepeatMasker). Basically it produces a bed file from the gff file with
 # overlapping features merged.
 
+## version 2.3 - added --includestr
 ## version 2.1 - "from Bio.Alphabet import generic_dna" was removed from
 # BioPython >1.76. See https://biopython.org/wiki/Alphabet . I also changed a
 # line to be more precise looking for lines that are comments and not
@@ -23,7 +24,7 @@ import sys  # To exit the script, and to pipe out
 import os  # For the input name
 # ------------------------------------------------------
 
-version = 2.2
+version = 2.3
 versiondisplay = "{0:.2f}".format(version)
 
 # ============================
@@ -37,6 +38,7 @@ parser.add_argument("--bed", "-b", help="Input is bed file already, in which cas
 parser.add_argument("--fasta", "-f", help="The corresponding assembly to calculate percentage of coverage", type=str)
 parser.add_argument("--exclude", "-e", help="Exclude contig(s) in format ctg1,ctg2,ctg3", type=str, default = '')
 parser.add_argument("--excludestr", "-E", help="Exclude contig(s) that contain the given string", type=str)
+parser.add_argument("--includestr", "-I", help="Only include contig(s) that contain the given string", type=str)
 
 parser.add_argument('--version', '-v', action='version', version='%(prog)s ' + versiondisplay)
 
@@ -125,9 +127,11 @@ if args.fasta:
 	# This stores in memory
 	records_dict = SeqIO.to_dict(SeqIO.parse(fastaopen, "fasta"))
 
-	# Exclude contigs if necessary
+	# Exclude contigs if necessary
 	if args.excludestr:
 		nicectgs = [ctg for ctg in records_dict.keys() if args.excludestr not in ctg]
+	elif args.includestr:
+		nicectgs = [ctg for ctg in records_dict.keys() if args.includestr in ctg]
 	else:
 		exclulist = (args.exclude).split(",")
 		nicectgs = [ctg for ctg in records_dict.keys() if ctg not in exclulist]
