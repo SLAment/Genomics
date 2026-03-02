@@ -22,7 +22,7 @@ versiondisplay = "{0:.2f}".format(version)
 # ============================
 # Make a nice menu for the user
 # ============================
-parser = argparse.ArgumentParser(description="* Extract GFF3 features to fasta file *", epilog="The name in the first column of the GFF3 has to be the same as the sequence in the fasta file.")  # Create the object using class argparse
+parser = argparse.ArgumentParser(description="* Process the output of TideCluster to produce a consensus library compatible with Repeat Masker *", epilog="The script will duplicate the monomers of the superfamilies by default.")  # Create the object using class argparse
 
 # Add options
 parser.add_argument('tarean', help="The tarean_report.tsv file")
