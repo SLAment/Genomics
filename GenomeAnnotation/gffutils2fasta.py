@@ -14,10 +14,10 @@
 # https://github.com/The-Sequence-Ontology/Specifications/blob/master/gff3.md
 
 # CAVEATS:
-# - The script assumes that the gene is the higher level in the attributes (i.e. polycistronic transcripts are not compatible)
 # - It can't deal with circular features
 
 ## VERSION notes
+# version 4.0 - Now handles GFF files where mRNA/transcript is the top-level feature (no parent gene)
 # version 3.0 - Now properly handles genes with multiple isoforms (mRNAs/transcripts)
 # version 2.33 - Deal with Augustus GFF files that have a transcript rather than mRNA type
 # version 2.31 - Now the name of the specific gene will be searched in the Note attribute too
@@ -30,7 +30,7 @@
 # version 1.5 - "from Bio.Alphabet import generic_dna" was removed from BioPython >1.76. See https://biopython.org/wiki/Alphabet
 # ==================================================
 # Sandra Lorena Ament Velasquez
-# 2019/03/27 - 2026/04/24
+# 2019/03/27 - 2026/04/30
 # +++++++++++++++++++++++++++++++++++++++++++++++++
 
 # ------------------------------------------------------
@@ -43,7 +43,7 @@ import re
 import gffutils
 # ------------------------------------------------------
 
-version = 3.0
+version = 4.0
 versiondisplay = "{0:.2f}".format(version)
 supportedtypes = ["gene", "CDS", "cds", "exon", "exoncds", "noutrs", "similarity", "expressed_sequence_match", "repeat", "pseudogene"] # Unlike the CDS, Exons may contain the UTRs; noutrs is from start to stop codon without introns in nucleotides
 
@@ -188,11 +188,63 @@ def get_isoforms(gene, db, mRNAtype):
 		# If no mRNA/transcript features, return empty list
 		return []
 
+def detect_top_level_type(db):
+	"""
+	Detect whether the GFF has 'gene' as top-level or mRNA/transcript as top-level.
+	Returns a tuple: (top_level_type, mrna_type)
+	- top_level_type: 'gene', 'mRNA', 'transcript', or None
+	- mrna_type: 'mRNA' or 'transcript' (for child features when gene is top-level)
+	"""
+	# Count features of each type
+	gene_count = db.count_features_of_type('gene')
+	mrna_count = db.count_features_of_type('mRNA')
+	transcript_count = db.count_features_of_type('transcript')
+	
+	if args.verbose:
+		print(f"Feature counts - genes: {gene_count}, mRNAs: {mrna_count}, transcripts: {transcript_count}")
+	
+	if gene_count > 0:
+		# Genes exist, determine mRNA type
+		if mrna_count > 0:
+			return ('gene', 'mRNA')
+		elif transcript_count > 0:
+			return ('gene', 'transcript')
+		else:
+			# Genes exist but no mRNA/transcript children
+			return ('gene', None)
+	else:
+		# No genes, check for top-level mRNA or transcript
+		if mrna_count > 0:
+			return ('mRNA', 'mRNA')
+		elif transcript_count > 0:
+			return ('transcript', 'transcript')
+		else:
+			return (None, None)
+
+def check_mrna_in_focalgenes(mrna, mrnaID, mrnaname, focalgenes):
+	"""Check if an mRNA matches the focal genes list"""
+	if 'Note' in mrna.attributes:
+		if mrna.attributes['Note'][0] in focalgenes:
+			return True
+	
+	if (mrnaID in focalgenes) or (mrnaname in focalgenes):
+		return True
+	
+	return False
+
 # ---------------------------
 ## Only look for some specific gene
 # ---------------------------
 if args.specificgene: # Only one specific gene, or string of genes, is required
 	focalgenes = [gene for gene in args.specificgene.split(",")]
+
+# ---------------------------
+## Detect GFF structure
+# ---------------------------
+top_level_type, global_mrna_type = detect_top_level_type(db)
+
+if args.verbose:
+	print(f"Detected structure - Top level: {top_level_type}, mRNA type: {global_mrna_type}")
 
 # ---------------------------
 ## Retrieve the desire features
@@ -238,105 +290,357 @@ elif (args.type == "expressed_sequence_match") or (args.type == "repeat"):
 		# Print the sequence 
 		SeqIO.write(geneseq, output_handle, "fasta")
 
-### More canonical genes
+### More canonical genes - now handles both gene-level and mRNA-level top features
 else:
 	childwarning = False
-	for gene in db.features_of_type('gene'):
-		# dir(gene) --> 'astuple', 'attributes', 'bin', 'calc_bin', 'chrom', 'dialect', 'end', 'extra', 'featuretype', 'file_order', 'frame', 'id', 'keep_order', 'score', 'seqid', 'sequence', 'sort_attribute_values', 'source', 'start', 'stop', 'strand'
-		geneID = gene['ID'][0]
 
-		## -- Some gffs don't have a name feature (eg. funannotate output)
-		try:
-			genename = gene['Name'][0] # same as gene.attributes['Name'][0]
-		except:
-			genename = "" # An empty string
-		# --
+	# Case 1: Gene is the top-level feature
+	if top_level_type == 'gene':
+		for gene in db.features_of_type('gene'):
+			# dir(gene) --> 'astuple', 'attributes', 'bin', 'calc_bin', 'chrom', 'dialect', 'end', 'extra', 'featuretype', 'file_order', 'frame', 'id', 'keep_order', 'score', 'seqid', 'sequence', 'sort_attribute_values', 'source', 'start', 'stop', 'strand'
+			geneID = gene['ID'][0]
 
-		# -- Sometimes the first child is transcript and sometimes is mRNA
-		# Determine mRNA type for this gene
-		mRNAtype = get_mrna_type(gene, db)
-		# --
+			## -- Some gffs don't have a name feature (eg. funannotate output)
+			try:
+				genename = gene['Name'][0] # same as gene.attributes['Name'][0]
+			except:
+				genename = "" # An empty string
+			# --
 
-		seq_record = records_dict[gene.chrom] # The chromosome sequence
-		
-		# If the gene is not in the user's list, then skip the rest of the code and go to the next gene
-		if args.specificgene:
-			if 'Note' in gene.attributes:
-				if gene.attributes['Note'][0] not in focalgenes: continue
+			# -- Sometimes the first child is transcript and sometimes is mRNA
+			# Determine mRNA type for this gene
+			mRNAtype = get_mrna_type(gene, db)
+			# --
 
-			elif args.mRNAids: # Use the mRNA IDs to search in the focalgenes instead
-				mrna_children = list(db.children(gene, featuretype=mRNAtype, order_by='start')) if mRNAtype else []
-				found_mrna = False
-				for child in mrna_children:
-					mrnaID = child['ID'][0]
-					if mrnaID in focalgenes:
-						found_mrna = True
-						break
-				if not found_mrna: continue
-			elif (geneID not in focalgenes) and (genename not in focalgenes):
-				continue
-
-		if args.type == 'gene':
-			geneseq = getseqbasic(gene, seq_record) # Get the sequence for this gene
-			geneseq = seqnamer(geneID, genename, geneseq, typeseq = args.type) # Update the naming of the sequence
-
-			# Print the sequence 
-			SeqIO.write(geneseq, output_handle, "fasta")
-
-		elif args.type == 'noutrs':
-			# We want from the start to the stop codon, including the introns, but excluding the UTRs
-			# Get all isoforms
-			isoforms = get_isoforms(gene, db, mRNAtype)
+			seq_record = records_dict[gene.chrom] # The chromosome sequence
 			
-			if len(isoforms) == 0: # Some GFF3 files have no mRNA or transcript features but still have CDS
-				# Fallback: get CDS directly under gene
-				allchildren = [child for child in db.children(gene, featuretype='CDS', order_by='start')]
+			# If the gene is not in the user's list, then skip the rest of the code and go to the next gene
+			if args.specificgene:
+				if 'Note' in gene.attributes:
+					if gene.attributes['Note'][0] not in focalgenes: continue
 
-				if len(allchildren) >= 1: # Some genes might not even have CDS
-					start = allchildren[0].start - 1 - args.extrabp # Start of gene excluding UTRs
-					stop = allchildren[len(allchildren) - 1].end + args.extrabp # End of gene excluding UTRs
+				elif args.mRNAids: # Use the mRNA IDs to search in the focalgenes instead
+					mrna_children = list(db.children(gene, featuretype=mRNAtype, order_by='start')) if mRNAtype else []
+					found_mrna = False
+					for child in mrna_children:
+						mrnaID = child['ID'][0]
+						if mrnaID in focalgenes:
+							found_mrna = True
+							break
+					if not found_mrna: continue
+				elif (geneID not in focalgenes) and (genename not in focalgenes):
+					continue
+
+			if args.type == 'gene':
+				geneseq = getseqbasic(gene, seq_record) # Get the sequence for this gene
+				geneseq = seqnamer(geneID, genename, geneseq, typeseq = args.type) # Update the naming of the sequence
+
+				# Print the sequence 
+				SeqIO.write(geneseq, output_handle, "fasta")
+
+			elif args.type == 'noutrs':
+				# We want from the start to the stop codon, including the introns, but excluding the UTRs
+				# Get all isoforms
+				isoforms = get_isoforms(gene, db, mRNAtype)
+				
+				if len(isoforms) == 0: # Some GFF3 files have no mRNA or transcript features but still have CDS
+					# Fallback: get CDS directly under gene
+					allchildren = [child for child in db.children(gene, featuretype='CDS', order_by='start')]
+
+					if len(allchildren) >= 1: # Some genes might not even have CDS
+						start = allchildren[0].start - 1 - args.extrabp # Start of gene excluding UTRs
+						stop = allchildren[len(allchildren) - 1].end + args.extrabp # End of gene excluding UTRs
+						geneseq = seq_record[start:stop] # Precisely because GFF3 is based 1, so no - 1 is needed
+						geneseq = seqnamer(geneID, genename, geneseq, typeseq = 'gene_noutrs') # Update the naming of the sequence
+
+						# Print the sequence 
+						SeqIO.write(geneseq, output_handle, "fasta")
+				else: # There is at least one mRNA/transcript
+					for isoform in isoforms:
+						isoformID = isoform['ID'][0]
+						allchildren = [child for child in db.children(isoform, featuretype='CDS', order_by='start')]
+						
+						if len(allchildren) >= 1: # Some genes might not have CDS
+							start = allchildren[0].start - 1 - args.extrabp
+							stop = allchildren[len(allchildren) - 1].end + args.extrabp
+							geneseq = seq_record[start:stop]
+							
+							# Use isoform ID in naming if multiple isoforms
+							if len(isoforms) > 1 or args.mRNAids:
+								geneseq = seqnamer(isoformID, genename, geneseq, typeseq = 'gene_noutrs')
+							else:
+								geneseq = seqnamer(geneID, genename, geneseq, typeseq = 'gene_noutrs')
+							
+							SeqIO.write(geneseq, output_handle, "fasta")
+
+			# Getting exons	
+			elif args.type == 'exon':
+				# Get all isoforms
+				isoforms = get_isoforms(gene, db, mRNAtype)
+				
+				if len(isoforms) == 0:
+					# Fallback: get exons directly under gene
+					isoforms = [gene]
+					fallback_mode = True
+				else:
+					fallback_mode = False
+				
+				for isoform in isoforms:
+					if fallback_mode:
+						isoformID = geneID
+						exon_children = db.children(gene, featuretype='exon', order_by='start')
+					else:
+						isoformID = isoform['ID'][0]
+						exon_children = db.children(isoform, featuretype='exon', order_by='start')
+					
+					child_counter = 1
+					child_concat = Seq('')
+
+					for child in exon_children:
+						try:
+							childID = child['ID'][0]
+						except:
+							childID = isoformID + '_exon_' + str(child_counter)
+
+						start = child.start - 1
+						stop = child.end
+
+						if args.join:
+							# Get DNA seq
+							child_concat += seq_record[start:stop] # Last letter will be excluded
+						else:
+							# Get DNA seq
+							exonseq = seq_record[start:stop]
+
+							# The naming is a bit different than the normal, so I cannot use the function seqnamer()
+							if args.onlyids and args.onlynames:
+								exonseq.id = childID + "_" + genename + '_exon.' + str(child_counter)
+								exonseq.description = ''
+							elif args.onlyids: # Name of the output
+								exonseq.id = childID
+								exonseq.description = ''
+							elif args.onlynames: # Name of the output
+								exonseq.id = genename + '_exon.' + str(child_counter)
+								exonseq.description = ''
+							else:
+								exonseq.id = childID + '|' + isoformID + '|exon.' + str(child_counter) + '|'
+							
+							SeqIO.write(exonseq, output_handle, "fasta")
+						
+						child_counter += 1
+
+					if args.join and len(child_concat) > 0:
+						# Use isoform ID in naming
+						if len(isoforms) > 1 or args.mRNAids:
+							child_concat = seqnamer(isoformID, genename, child_concat, typeseq = 'concat_exons') # Update the naming of the sequence
+						else:
+							child_concat = seqnamer(geneID, genename, child_concat, typeseq = 'concat_exons')
+						SeqIO.write(child_concat, output_handle, "fasta")
+
+			# Getting CDS	
+			elif args.type == 'CDS' or args.type == "exoncds":
+				# Get all isoforms
+				isoforms = get_isoforms(gene, db, mRNAtype)
+				
+				if len(isoforms) == 0:
+					# Fallback: get CDS directly under gene (some GFFs are structured this way)
+					isoforms = [gene]
+					fallback_mode = True
+				else:
+					fallback_mode = False
+				
+				for isoform in isoforms:
+					if fallback_mode:
+						isoformID = geneID
+						cds_children = list(db.children(gene, featuretype='CDS', order_by='start'))
+					else:
+						isoformID = isoform['ID'][0]
+						cds_children = list(db.children(isoform, featuretype='CDS', order_by='start'))
+					
+					if len(cds_children) == 0:
+						continue  # Skip isoforms without CDS
+					
+					child_counter = 1
+					child_concat = Seq('')
+					last_phase = 0  # Track the phase of the last CDS for minus strand
+
+					for child in cds_children:
+						# Get the child ID
+						if args.mRNAids:
+							childID = isoformID
+						else:
+							# Some gffs don't have an ID for their CDS
+							try:
+								childID = child['ID'][0]
+							except:
+								childID = isoformID + '_CDS_' + str(child_counter)
+								childwarning = True
+
+						cdsparent = isoformID
+						strand = child.strand
+						phase = int(child.frame)
+						last_phase = phase  # Update for potential use with minus strand
+
+						if (strand != '+') and (strand != '-'):
+							print("There is no information of strand direction!")
+							sys.exit(1)
+
+						# Produce a protein sequence for the CDS in each exon (taking care of the phases)
+						if not args.join:
+							if strand == '+':
+								start = child.start - 1 + phase
+								raw_stop = child.end
+
+								if args.type == "CDS":
+									# Trim the extra bases at the end that are lost because the CDS are not joint
+									howmanycodons = (raw_stop - start) // 3
+									stop = (howmanycodons * 3) + start 
+								elif args.type == "exoncds":
+									start = child.start - 1
+									stop = raw_stop
+
+								# Get DNA seq and translate
+								cdsseq = seq_record[start:stop]
+
+								# If protein sequences are required
+								if args.proteinon:
+									cdsseq.seq = cdsseq.seq.translate(table = args.code)
+
+							elif strand == '-': 
+								raw_start = child.start - 1
+								stop = child.end - phase 
+
+								if args.type == "CDS":
+									# Trim the extra bases at the end that are lost because the CDS are not joint
+									howmanycodons = (stop - raw_start) // 3
+									start = stop - (howmanycodons * 3)
+								elif args.type == "exoncds":
+									start = raw_start
+									stop = child.end
+
+								if args.proteinon or args.type == "exoncds": # Get DNA seq, reverse complement, and translate
+									cdsseq = seq_record[start:stop].reverse_complement()
+									cdsseq.id = seq_record.id
+									cdsseq.description = seq_record.description
+									if args.proteinon:
+										cdsseq.seq = cdsseq.seq.translate(table = args.code)
+								else:
+									cdsseq = seq_record[start:stop]
+
+							if args.onlyids and args.onlynames:
+								cdsseq.id = childID + "_" + genename + '_CDS.' + str(child_counter)
+								cdsseq.description = ''
+							elif args.onlyids:
+								cdsseq.id = childID
+								cdsseq.description = ''
+							elif args.onlynames:
+								cdsseq.id = genename + '_CDS.' + str(child_counter)
+								cdsseq.description = ''
+							else:
+								cdsseq.id = childID + '|' + cdsparent + '|CDS.' + str(child_counter) + '|'
+						
+							SeqIO.write(cdsseq, output_handle, "fasta")
+							
+							child_counter += 1
+						
+						# Produce a single CDS for the entire isoform
+						else:
+							if strand == '+':
+								if child_counter == 1: # Consider it only on the beginning of the protein
+									start = child.start - 1 + phase
+									child_counter += 1
+								else: # All the other cds should be in frame
+									start = child.start - 1
+
+							elif strand == '-':
+								start = child.start - 1
+								child_counter += 1 # OJO
+
+							stop = child.end
+							# Get DNA seq
+							child_concat += seq_record[start:stop]
+
+					# Print joined CDS for this isoform
+					if args.join and args.type == 'CDS' and len(child_concat) > 0:
+						try: # Sometimes genes won't have a CDS feature, in which case we better move on...
+							# Get the strand from the last CDS child processed
+							if strand == '+':
+								if args.proteinon:
+									cdsseq_concat = child_concat.seq.translate(table = args.code)
+									child_concat.seq = cdsseq_concat
+							elif strand == '-':
+								# Use phase from the last CDS (which is the 5' end in minus strand) and reverse complement it
+								child_concat = child_concat[:len(child_concat) - last_phase].reverse_complement()
+								# Edit Seq object to have the same names again
+								child_concat.id = seq_record.id
+								child_concat.description = seq_record.description
+
+								if args.proteinon: # Translate to protein
+									cdsseq_concat = child_concat.seq.translate(table = args.code)
+									child_concat.seq = cdsseq_concat
+
+							elif args.insense and strand == '-': # It's not a protein but make it in the right sense
+								child_concat = child_concat[:len(child_concat) - last_phase].reverse_complement()
+
+							# Use isoform ID in naming
+							if args.mRNAids or len(isoforms) > 1:
+								child_concat = seqnamer(isoformID, genename, child_concat, typeseq = args.type)
+							else:
+								child_concat = seqnamer(geneID, genename, child_concat, typeseq = args.type)
+
+							SeqIO.write(child_concat, output_handle, "fasta")
+
+						except Exception as e:
+							if args.verbose: 
+								print(f"The isoform {isoformID} of gene {geneID} {genename} is problematic: {e}. Maybe it doesn't have a CDS? Skipped.")
+
+	# Case 2: mRNA/transcript is the top-level feature (no gene parent)
+	elif top_level_type in ['mRNA', 'transcript']:
+		if args.verbose:
+			print(f"Processing {top_level_type} as top-level features (no gene parent found)")
+		
+		for mrna in db.features_of_type(top_level_type):
+			# dir(mrna) --> 'astuple', 'attributes', 'bin', 'calc_bin', 'chrom', 'dialect', 'end', 'extra', 'featuretype', 'file_order', 'frame', 'id', 'keep_order', 'score', 'seqid', 'sequence', 'sort_attribute_values', 'source', 'start', 'stop', 'strand'
+			mrnaID = mrna['ID'][0]
+
+			## -- Some gffs don't have a name feature
+			try:
+				mrnaname = mrna['Name'][0] # same as mrna.attributes['Name'][0]
+			except:
+				mrnaname = "" # An empty string
+			# --
+
+			seq_record = records_dict[mrna.chrom] # The chromosome sequence
+			
+			# If the mRNA is not in the user's list, then skip the rest of the code and go to the next mRNA
+			if args.specificgene:
+				if not check_mrna_in_focalgenes(mrna, mrnaID, mrnaname, focalgenes):
+					continue
+
+			if args.type == 'gene':
+				# When user asks for 'gene' but only mRNA exists, extract the mRNA span
+				geneseq = getseqbasic(mrna, seq_record) # Get the sequence for this mRNA
+				geneseq = seqnamer(mrnaID, mrnaname, geneseq, typeseq = 'mRNA') # Update the naming of the sequence
+
+				# Print the sequence 
+				SeqIO.write(geneseq, output_handle, "fasta")
+
+			elif args.type == 'noutrs':
+				# We want from the start to the stop codon, including the introns, but excluding the UTRs
+				allchildren = [child for child in db.children(mrna, featuretype='CDS', order_by='start')]
+
+				if len(allchildren) >= 1: # Some mRNAs might not have CDS
+					start = allchildren[0].start - 1 - args.extrabp # Start of mRNA excluding UTRs
+					stop = allchildren[len(allchildren) - 1].end + args.extrabp # End of mRNA excluding UTRs
 					geneseq = seq_record[start:stop] # Precisely because GFF3 is based 1, so no - 1 is needed
-					geneseq = seqnamer(geneID, genename, geneseq, typeseq = 'gene_noutrs') # Update the naming of the sequence
+					geneseq = seqnamer(mrnaID, mrnaname, geneseq, typeseq = 'gene_noutrs') # Update the naming of the sequence
 
 					# Print the sequence 
 					SeqIO.write(geneseq, output_handle, "fasta")
-			else: # There is at least one mRNA/transcript
-				for isoform in isoforms:
-					isoformID = isoform['ID'][0]
-					allchildren = [child for child in db.children(isoform, featuretype='CDS', order_by='start')]
-					
-					if len(allchildren) >= 1: # Some genes might not have CDS
-						start = allchildren[0].start - 1 - args.extrabp
-						stop = allchildren[len(allchildren) - 1].end + args.extrabp
-						geneseq = seq_record[start:stop]
-						
-						# Use isoform ID in naming if multiple isoforms
-						if len(isoforms) > 1 or args.mRNAids:
-							geneseq = seqnamer(isoformID, genename, geneseq, typeseq = 'gene_noutrs')
-						else:
-							geneseq = seqnamer(geneID, genename, geneseq, typeseq = 'gene_noutrs')
-						
-						SeqIO.write(geneseq, output_handle, "fasta")
 
-		# Getting exons	
-		elif args.type == 'exon':
-			# Get all isoforms
-			isoforms = get_isoforms(gene, db, mRNAtype)
-			
-			if len(isoforms) == 0:
-				# Fallback: get exons directly under gene
-				isoforms = [gene]
-				fallback_mode = True
-			else:
-				fallback_mode = False
-			
-			for isoform in isoforms:
-				if fallback_mode:
-					isoformID = geneID
-					exon_children = db.children(gene, featuretype='exon', order_by='start')
-				else:
-					isoformID = isoform['ID'][0]
-					exon_children = db.children(isoform, featuretype='exon', order_by='start')
+			# Getting exons	
+			elif args.type == 'exon':
+				exon_children = db.children(mrna, featuretype='exon', order_by='start')
 				
 				child_counter = 1
 				child_concat = Seq('')
@@ -345,7 +649,7 @@ else:
 					try:
 						childID = child['ID'][0]
 					except:
-						childID = isoformID + '_exon_' + str(child_counter)
+						childID = mrnaID + '_exon_' + str(child_counter)
 
 					start = child.start - 1
 					stop = child.end
@@ -359,51 +663,31 @@ else:
 
 						# The naming is a bit different than the normal, so I cannot use the function seqnamer()
 						if args.onlyids and args.onlynames:
-							exonseq.id = childID + "_" + genename + '_exon.' + str(child_counter)
+							exonseq.id = childID + "_" + mrnaname + '_exon.' + str(child_counter)
 							exonseq.description = ''
 						elif args.onlyids: # Name of the output
 							exonseq.id = childID
 							exonseq.description = ''
 						elif args.onlynames: # Name of the output
-							exonseq.id = genename + '_exon.' + str(child_counter)
+							exonseq.id = mrnaname + '_exon.' + str(child_counter)
 							exonseq.description = ''
 						else:
-							exonseq.id = childID + '|' + isoformID + '|exon.' + str(child_counter) + '|'
+							exonseq.id = childID + '|' + mrnaID + '|exon.' + str(child_counter) + '|'
 						
 						SeqIO.write(exonseq, output_handle, "fasta")
 					
 					child_counter += 1
 
 				if args.join and len(child_concat) > 0:
-					# Use isoform ID in naming
-					if len(isoforms) > 1 or args.mRNAids:
-						child_concat = seqnamer(isoformID, genename, child_concat, typeseq = 'concat_exons') # Update the naming of the sequence
-					else:
-						child_concat = seqnamer(geneID, genename, child_concat, typeseq = 'concat_exons')
+					child_concat = seqnamer(mrnaID, mrnaname, child_concat, typeseq = 'concat_exons') # Update the naming of the sequence
 					SeqIO.write(child_concat, output_handle, "fasta")
 
-		# Getting CDS	
-		elif args.type == 'CDS' or args.type == "exoncds":
-			# Get all isoforms
-			isoforms = get_isoforms(gene, db, mRNAtype)
-			
-			if len(isoforms) == 0:
-				# Fallback: get CDS directly under gene (some GFFs are structured this way)
-				isoforms = [gene]
-				fallback_mode = True
-			else:
-				fallback_mode = False
-			
-			for isoform in isoforms:
-				if fallback_mode:
-					isoformID = geneID
-					cds_children = list(db.children(gene, featuretype='CDS', order_by='start'))
-				else:
-					isoformID = isoform['ID'][0]
-					cds_children = list(db.children(isoform, featuretype='CDS', order_by='start'))
+			# Getting CDS	
+			elif args.type == 'CDS' or args.type == "exoncds":
+				cds_children = list(db.children(mrna, featuretype='CDS', order_by='start'))
 				
 				if len(cds_children) == 0:
-					continue  # Skip isoforms without CDS
+					continue  # Skip mRNAs without CDS
 				
 				child_counter = 1
 				child_concat = Seq('')
@@ -412,16 +696,16 @@ else:
 				for child in cds_children:
 					# Get the child ID
 					if args.mRNAids:
-						childID = isoformID
+						childID = mrnaID
 					else:
 						# Some gffs don't have an ID for their CDS
 						try:
 							childID = child['ID'][0]
 						except:
-							childID = isoformID + '_CDS_' + str(child_counter)
+							childID = mrnaID + '_CDS_' + str(child_counter)
 							childwarning = True
 
-					cdsparent = isoformID
+					cdsparent = mrnaID
 					strand = child.strand
 					phase = int(child.frame)
 					last_phase = phase  # Update for potential use with minus strand
@@ -473,13 +757,13 @@ else:
 								cdsseq = seq_record[start:stop]
 
 						if args.onlyids and args.onlynames:
-							cdsseq.id = childID + "_" + genename + '_CDS.' + str(child_counter)
+							cdsseq.id = childID + "_" + mrnaname + '_CDS.' + str(child_counter)
 							cdsseq.description = ''
 						elif args.onlyids:
 							cdsseq.id = childID
 							cdsseq.description = ''
 						elif args.onlynames:
-							cdsseq.id = genename + '_CDS.' + str(child_counter)
+							cdsseq.id = mrnaname + '_CDS.' + str(child_counter)
 							cdsseq.description = ''
 						else:
 							cdsseq.id = childID + '|' + cdsparent + '|CDS.' + str(child_counter) + '|'
@@ -488,7 +772,7 @@ else:
 						
 						child_counter += 1
 					
-					# Produce a single CDS for the entire isoform
+					# Produce a single CDS for the entire mRNA
 					else:
 						if strand == '+':
 							if child_counter == 1: # Consider it only on the beginning of the protein
@@ -505,9 +789,9 @@ else:
 						# Get DNA seq
 						child_concat += seq_record[start:stop]
 
-				# Print joined CDS for this isoform
+				# Print joined CDS for this mRNA
 				if args.join and args.type == 'CDS' and len(child_concat) > 0:
-					try: # Sometimes genes won't have a CDS feature, in which case we better move on...
+					try: # Sometimes mRNAs won't have a CDS feature, in which case we better move on...
 						# Get the strand from the last CDS child processed
 						if strand == '+':
 							if args.proteinon:
@@ -527,17 +811,21 @@ else:
 						elif args.insense and strand == '-': # It's not a protein but make it in the right sense
 							child_concat = child_concat[:len(child_concat) - last_phase].reverse_complement()
 
-						# Use isoform ID in naming
-						if args.mRNAids or len(isoforms) > 1:
-							child_concat = seqnamer(isoformID, genename, child_concat, typeseq = args.type)
-						else:
-							child_concat = seqnamer(geneID, genename, child_concat, typeseq = args.type)
+						child_concat = seqnamer(mrnaID, mrnaname, child_concat, typeseq = args.type)
 
 						SeqIO.write(child_concat, output_handle, "fasta")
 
 					except Exception as e:
 						if args.verbose: 
-							print(f"The isoform {isoformID} of gene {geneID} {genename} is problematic: {e}. Maybe it doesn't have a CDS? Skipped.")
+							print(f"The mRNA {mrnaID} {mrnaname} is problematic: {e}. Maybe it doesn't have a CDS? Skipped.")
+
+	# Case 3: No gene or mRNA features found
+	else:
+		print("WARNING: No gene, mRNA, or transcript features found in the GFF file.")
+		print("Available feature types in the database:")
+		for featuretype in db.featuretypes():
+			count = db.count_features_of_type(featuretype)
+			print(f"  {featuretype}: {count}")
 
 	if childwarning and args.onlyids and not args.join: 
 		print("WARNING: The CDS have no IDs so the sequences will have no names!")
@@ -585,5 +873,3 @@ A GFF3 file has the following fields
 # --------------------------------------------
 
 # print("--- %s seconds ---" % (time.time() - start_time))
-
-
