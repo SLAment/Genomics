@@ -59,7 +59,7 @@ The scripts are made to either parse the BLAST output, filter it or modify it, o
 	* expressed_sequence_match - this is found in the output of MAKER as alignment of other proteins
     * repeat - modified version of the RepeatMasker gtf as produced by `gtfRM2gff.py`
 
-**OBS** The script CAN'T deal with genes with multiple isoforms (mRNAs). If forced, it might fuse exons were it shouldn't. Use with care.
+- `gff2longest.py` - Script derived from `gffutils2fasta.py`, it returns only the longest isoform (as CDS or mRNA) in fasta format for a given GFF3 file and its associated genome fasta file. This output is useful when searching for orthogroups, for example.
 
 - `gff3TOtbl.py` - A simple script to transform a basic gff3 to a tbl file, similar to the one produced by `MFannot4ncbi.py`. It can't handle multiple mRNA isoforms. This is ideal if you make manual curation into your gff3 (as produced by `tbl2gff.py`, for example) and need to produce a tbl file again. I did this for the output of MFannot, so the script has a particular option to deal with the endonucleases and introns annotated by this program: they get annotated as mobile_element features. Otherwise they are treated like protein-coding genes (without `--mfannot`).
 
