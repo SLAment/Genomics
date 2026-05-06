@@ -21,12 +21,12 @@ versiondisplay = "{0:.2f}".format(version)
 # Input from console
 # ---------------------------------
 try:
-	fastafile = sys.argv[1]
-	# fastaopen = open(fastafile, 'r')
+    fastafile = sys.argv[1]
+    # fastaopen = open(fastafile, 'r')
 except:
-	print("Usage: python quickN50.py file.fasta")
-	print("Version" + versiondisplay)
-	sys.exit(1)
+    print("Usage: python quickN50.py file.fasta")
+    print("Version" + versiondisplay)
+    sys.exit(1)
 # ---------------------------------
 
 
@@ -53,7 +53,8 @@ contig_lengths = fasta_to_lengths(fastafile)
 n50 = calculate_n50(contig_lengths)
 
 total_bp = sum(contig_lengths)
-total_gb = total_bp / 1e9  # Convert bp to Gb
+total_gb = total_bp / 1e9  # Convert bp to Gb (use 1e6 for Mb)
 
+print(f"Total contigs = {len(contig_lengths)}")
 print(f"Total size = {total_bp} bp ({total_gb:.2f} Gb)")
 print("N50 =", n50)
