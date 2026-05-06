@@ -149,7 +149,7 @@ def gen():
 		# The annotation of trnascan is in the name
 		trnastatus = False
 		if 'trnascan' in thing['ID'][0]: # Produced by tRNAscan, so a specific format is expected	
-			trnascanpattern = re.compile('trnascan-[\w]*-noncoding-([\w]*)_([\w]{3})-[\w\d\.-]*')
+			trnascanpattern = re.compile(r'trnascan-[\w]*-noncoding-([\w]*)_([\w]{3})-[\w\d\.-]*')
 			matchy = trnascanpattern.search(thing['ID'][0])
 			if matchy:
 				trnastatus = True
