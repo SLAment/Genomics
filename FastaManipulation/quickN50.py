@@ -51,5 +51,7 @@ def fasta_to_lengths(fasta_file):
 # Produce the N50
 contig_lengths = fasta_to_lengths(fastafile)
 n50 = calculate_n50(contig_lengths)
+
+print(f"Total size = {sum(contig_lengths)} bp")
 print("N50 =", n50)
 
