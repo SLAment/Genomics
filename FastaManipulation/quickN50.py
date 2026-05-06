@@ -54,7 +54,8 @@ n50 = calculate_n50(contig_lengths)
 
 total_bp = sum(contig_lengths)
 total_gb = total_bp / 1e9  # Convert bp to Gb (use 1e6 for Mb)
+n59_mb = n50 / 1e6
 
 print(f"Total contigs = {len(contig_lengths)}")
 print(f"Total size = {total_bp} bp ({total_gb:.2f} Gb)")
-print("N50 =", n50)
+print(f"N50 = {n50} bp ({n59_mb:.2f} Mb)")
