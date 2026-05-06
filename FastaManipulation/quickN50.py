@@ -52,6 +52,8 @@ def fasta_to_lengths(fasta_file):
 contig_lengths = fasta_to_lengths(fastafile)
 n50 = calculate_n50(contig_lengths)
 
-print(f"Total size = {sum(contig_lengths)} bp")
-print("N50 =", n50)
+total_bp = sum(contig_lengths)
+total_gb = total_bp / 1e9  # Convert bp to Gb
 
+print(f"Total size = {total_bp} bp ({total_gb:.2f} Gb)")
+print("N50 =", n50)
