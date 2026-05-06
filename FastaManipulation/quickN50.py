@@ -14,7 +14,7 @@ from Bio import SeqIO
 import sys
 
 # ------------------------------------------------------
-version = 1.1
+version = 1.2
 versiondisplay = "{0:.2f}".format(version)
 
 # ---------------------------------
