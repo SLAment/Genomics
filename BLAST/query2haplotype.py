@@ -70,7 +70,7 @@ selfgroup.add_argument("--noself", "-n", help="Attempt to remove BLAST selfhits 
 
 # Extras
 parser.add_argument("--blastab", "-b", help="The query is not a fasta, but a BLAST tab file to be used directly instead of doing the whole BLAST", default=False, action='store_true')
-parser.add_argument("--seqid", "-I", help="Name of query gene to be extracted from the input multifasta QUERY file. eg. Pa_6_4990", type=str)
+parser.add_argument("--seqid", "-I", help="Name of query gene to be used from the input multifasta QUERY file. eg. Pa_6_4990", type=str)
 parser.add_argument("--threads", "-t", help="Number of threads for BLAST. Default: 1", default="1", type=int) # nargs='+' All, and at least one, argument
 parser.add_argument('--temp', '-u', help="Path and directory where temporary files are written in style path/to/dir. Default: working directory", default='.')
 parser.add_argument('--clean', '-C', help="Erase the temporary directories and files when finish", default=False, action='store_true')
