@@ -2,7 +2,7 @@
 # encoding: utf-8
 
 # ================== totalcovergff =================
-# Script to obtained the merged coordinates of all models in gff file (eg.
+# Script to obtain the merged coordinates of all models in gff file (eg.
 # from RepeatMasker). Basically it produces a bed file from the gff file with
 # overlapping features merged.
 
